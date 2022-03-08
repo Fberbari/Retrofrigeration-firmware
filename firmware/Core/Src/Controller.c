@@ -20,6 +20,10 @@ typedef enum state
  * Variables
  **********************************************************************************************************************/
 
+// HAL handles. These should all be extern, as they are defined and initialized by cubeMX (the code generation tool) in main.c
+extern TIM_HandleTypeDef htim2;
+
+// user variables
 static Controller_State_t currentState;
 
 static bool periodHasPassed;
@@ -27,6 +31,8 @@ static bool periodHasPassed;
 /***********************************************************************************************************************
  * Prototypes
  **********************************************************************************************************************/
+
+static void StartPeriodTimer(void);
 
 static Controller_State_t CollectData_State(void);
 static Controller_State_t LogData_State(void);
@@ -42,6 +48,8 @@ static Controller_State_t Failed_State(void);
 void Controller_Init(void)
 {
     Actuators_Init();
+
+    StartPeriodTimer();
 
     currentState = CTRL_COLLECT_DATA;
 }
@@ -85,8 +93,8 @@ void Controller_SaveTheAfricans(void)
 
 static Controller_State_t CollectData_State(void)
 {
-    return CTRL_LOG_DATA;
 
+    return CTRL_LOG_DATA;
 }
 
 static Controller_State_t LogData_State(void)
@@ -106,10 +114,32 @@ static Controller_State_t ActuateFridge_State(void)
 
 static Controller_State_t WaitForTimer_State(void)
 {
+    if (periodHasPassed)
+    {
+        periodHasPassed = false;
+
+        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
+        return CTRL_COLLECT_DATA;
+    }
+
     return CTRL_WAIT_FOR_TIMER;
 }
 
 static Controller_State_t Failed_State(void)
 {
     return CTRL_FAILED;
+}
+
+static void StartPeriodTimer(void)
+{
+    HAL_TIM_Base_Start_IT(&htim2);
+}
+
+
+/****************************Interrupt Handlers****************************/
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    periodHasPassed = true;
 }

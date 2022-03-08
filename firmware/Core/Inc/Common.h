@@ -1,5 +1,7 @@
 #pragma once
 
+#include "main.h"
+
 #include <stdbool.h>
 
 /**
@@ -11,8 +13,9 @@
  * Definitions
  **********************************************************************************************************************/
 
+#define CTRL_LOOP_FREQUENCY 50  // Hz
+
+
 #define RETROFRIGERATION_BUSY         2
 #define RETROFRIGERATION_SUCCEEDED    1
 #define RETROFRIGERATION_FAILED       0
-
-// TODO include control loop period
