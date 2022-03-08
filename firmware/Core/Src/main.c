@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "Controller.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,20 +94,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+    Controller_SaveTheAfricans();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	// Actually lowkey insane ECE is almost over eih.... it's a decent life.
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-
-	HAL_Delay(500);
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-
-	HAL_Delay(500);
-
   }
   /* USER CODE END 3 */
 }
