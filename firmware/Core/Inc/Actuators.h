@@ -43,4 +43,4 @@ void Actuators_Init(void);
 * @param[in]        ActuatorCommands          struct containing the requested actuator states
 * @return           RETROFRIGERATION_SUCCEEDED, RETROFRIGERATION_BUSY or RETROFRIGERATION_FAILED
 */
-int Actuators_ActuateSystem(const ActuatorCommands_t * ActuatorCommands);
+int Actuators_ActuateSystem(const ActuatorCommands_t *ActuatorCommands);
