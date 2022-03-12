@@ -15,6 +15,8 @@
 
 #define CTRL_LOOP_FREQUENCY 50  // Hz
 
+#define LOG_SUCCEEDED                 1
+#define LOG_FAILED                    0
 
 #define RETROFRIGERATION_BUSY         2
 #define RETROFRIGERATION_SUCCEEDED    1
