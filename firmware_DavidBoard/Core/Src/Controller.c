@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "I2CManager.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -49,6 +50,8 @@ static Controller_State_t Failed_State(void);
 void Controller_Init(void)
 {
     Actuators_Init();
+
+    I2CManager_Init();
 
     StartPeriodTimer();
 
@@ -100,6 +103,7 @@ static Controller_State_t CollectData_State(void)
 
 static Controller_State_t LogData_State(void)
 {
+
     return CTRL_DO_MATH;
 }
 

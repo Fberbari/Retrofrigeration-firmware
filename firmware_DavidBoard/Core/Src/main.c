@@ -95,7 +95,12 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  // Interrupts are disabled for the setup portion.
+  __disable_irq();
+
   Controller_Init();
+
+  __enable_irq();
 
   /* USER CODE END 2 */
 
