@@ -36,6 +36,6 @@ void Logs_Init(void);
 * @param[in]        LogData          struct containing the average, min and max temperature
 * @return           LOG_SUCCEEDED or LOG_FAILED
 */
-int Logs_LogData(const LogData_t *LogData);
-bool Logs_WifiData(const LogData_t *LogData);
-bool Logs_FlashData(const LogData_t *LogData);
+int Logs_LogLCD(const LogData_t *LogData);
+int Logs_LogWifi(const LogData_t *LogData);
+int Logs_LogFlash(const LogData_t *LogData);

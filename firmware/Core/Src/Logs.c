@@ -9,17 +9,12 @@ void Logs_Init(void)
 {
 }
 
-int Logs_LogData(const LogData_t * LogData)
+int Logs_LogLCD(const LogData_t * LogData)
 {
-    if(Logs_WifiData(* LogData)):
-        return LOG_SUCCEEDED;
-    elif(Logs_FlashData(* LogData)):
-        return LOG_SUCCEEDED;
-    else:
-        return LOG_FAILED;
+    return 1;
 }
 
-bool Logs_WifiData(const LogData_t * LogData)
+int Logs_LogWifi(const LogData_t * LogData)
 {
   // check wifi connnection
   // if wifi not connected, return 0
@@ -29,7 +24,7 @@ bool Logs_WifiData(const LogData_t * LogData)
     return 1;
 }
 
-bool Logs_FlashData(const LogData_t * LogData)
+int Logs_LogFlash(const LogData_t * LogData)
 {
     // SPI to EEPROM
     return 1;
