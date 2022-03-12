@@ -28,6 +28,7 @@ static ActuatorCommands_t ActuatorCommands;
 
 static Controller_State_t currentState;
 static bool periodHasPassed;
+static temp_probe_readings readings;
 
 /***********************************************************************************************************************
  * Prototypes
@@ -103,43 +104,49 @@ static Controller_State_t LogData_State(void)
     return CTRL_DO_MATH;
 }
 
-float savedTemps[];
-float loopCounter;
+
 
 
 static Controller_State_t DoMath_State(void)
 {
-    float temps[5] = {t1, t2, t3, t4, t5}; //5 temp probe readings
+    static float loopCounter;
+    static float comp_off_counter;
+    //get 5 temp readings
+    float temps[5] = {readings.t1, readings.t2, readings.t3, readings.t4, readings.t5}; //5 temp probe readings
     float temp_diffs[5]; //to store deltas between probe readings and avg temp
     float avgTemp = 0; //mean temperature
-    float fan_treshold = 1; //desired fan treshold
-    int actuate[2] = {0, 0}; //first position is fan, second is compressor
+    float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
 
     for (int i=0, i<5; i++)
         avgTemp += temps[i] / 5; //calculate mean temp
 
     //fan control
-    if(loopCounter % 200 ==0) //every 2 seconds
+    if(loopCounter % 100 ==0) //every 2 seconds
         for (int i=0, i<5; i++)
         {
             temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
             if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)
-                actuate[0] = 1; //if any probe exceeds treshold, turn on internal fan
+                ActuatorCommands.fan = FAN_ON; //if any probe exceeds treshold, turn on internal fan
+            else ActuatorCommands.fan = FAN_OFF;
         }
 
     //compressor control
-    if(loopCounter % (50*120) ==0) //every 2 min
+    if (avgTemp > 3 && comp_off_counter >= 50*75) //on at 3C if off for at least 75s
     {
-        if (avgTemp > 3) //on at 3C
-            actuate[1] = 1;
-        else if (avgTemp < 1)
-            actuate[1] = 0; //off at 1C
-        loopCounter =0;
+        loopCounter =0; //reset loop counter every so often to avoid overflow
+        ActuatorCommands.compressor = COMPRESSOR_ON;
     }
 
+    else if (avgTemp < 1) //off at 1C
+    {
+        ActuatorCommands.compressor = COMPRESSOR_OFF;
+        comp_off_counter =0; //reset compressor off counter since compressor is switched off
+    }
 
+    //increment both counters
     loopCounter++;
-    return actuate;
+    comp_off_counter++;
+    return CTRL_ACTUATE_FRIDGE;;
 }
 
 static Controller_State_t ActuateFridge_State(void)
