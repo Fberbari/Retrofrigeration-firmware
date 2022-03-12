@@ -1,5 +1,2 @@
-firmware/Debug
-firmware/.settings
-
-firmware-DavidBoard/Debug
-firmware-DavidBoard/.settings
+**/Debug
+**/.settings
