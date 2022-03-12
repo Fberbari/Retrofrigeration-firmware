@@ -103,9 +103,43 @@ static Controller_State_t LogData_State(void)
     return CTRL_DO_MATH;
 }
 
+float savedTemps[];
+float loopCounter;
+
+
 static Controller_State_t DoMath_State(void)
 {
-    return CTRL_ACTUATE_FRIDGE;
+    float temps[5] = {t1, t2, t3, t4, t5}; //5 temp probe readings
+    float temp_diffs[5]; //to store deltas between probe readings and avg temp
+    float avgTemp = 0; //mean temperature
+    float fan_treshold = 1; //desired fan treshold
+    int actuate[2] = {0, 0}; //first position is fan, second is compressor
+
+    for (int i=0, i<5; i++)
+        avgTemp += temps[i] / 5; //calculate mean temp
+
+    //fan control
+    if(loopCounter % 200 ==0) //every 2 seconds
+        for (int i=0, i<5; i++)
+        {
+            temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
+            if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)
+                actuate[0] = 1; //if any probe exceeds treshold, turn on internal fan
+        }
+
+    //compressor control
+    if(loopCounter % (50*120) ==0) //every 2 min
+    {
+        if (avgTemp > 3) //on at 3C
+            actuate[1] = 1;
+        else if (avgTemp < 1)
+            actuate[1] = 0; //off at 1C
+        loopCounter =0;
+    }
+
+
+    loopCounter++;
+    return actuate;
 }
 
 static Controller_State_t ActuateFridge_State(void)
