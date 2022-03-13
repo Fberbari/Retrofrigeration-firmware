@@ -1,0 +1,10 @@
+../Core/Src/Controller.c:49:6:Controller_Init	8	static
+../Core/Src/Controller.c:58:6:Controller_SaveTheAfricans	24	static
+../Core/Src/Controller.c:95:27:CollectData_State	8	static
+../Core/Src/Controller.c:101:27:LogData_State	8	static
+../Core/Src/Controller.c:106:27:DoMath_State	8	static
+../Core/Src/Controller.c:111:27:ActuateFridge_State	16	static
+../Core/Src/Controller.c:123:27:WaitForTimer_State	8	static
+../Core/Src/Controller.c:135:27:Failed_State	8	static
+../Core/Src/Controller.c:140:13:StartPeriodTimer	8	static
+../Core/Src/Controller.c:148:6:HAL_TIM_PeriodElapsedCallback	16	static

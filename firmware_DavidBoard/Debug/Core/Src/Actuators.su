@@ -1,0 +1,2 @@
+../Core/Src/Actuators.c:7:6:Actuators_Init	8	static
+../Core/Src/Actuators.c:11:5:Actuators_ActuateSystem	16	static
