@@ -20,7 +20,7 @@ typedef struct
     float t3;
     float t4;
     float t5;
-}temp_probe_readings;
+}temp_probe_readings_t;
 #define CTRL_LOOP_FREQUENCY 50  // Hz
 
 

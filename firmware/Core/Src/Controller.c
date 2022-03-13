@@ -28,7 +28,7 @@ static ActuatorCommands_t ActuatorCommands;
 
 static Controller_State_t currentState;
 static bool periodHasPassed;
-static temp_probe_readings readings;
+static temp_probe_readings_t temp_probe_readings;
 
 /***********************************************************************************************************************
  * Prototypes
@@ -112,7 +112,7 @@ static Controller_State_t DoMath_State(void)
     static float loopCounter;
     static float comp_off_counter;
     //get 5 temp readings
-    float temps[5] = {readings.t1, readings.t2, readings.t3, readings.t4, readings.t5}; //5 temp probe readings
+    float temps[5] = {temp_probe_readings.t1, temp_probe_readings.t2, temp_probe_readings.t3, temp_probe_readings.t4, temp_probe_readings.t5}; //5 temp probe readings
     float temp_diffs[5]; //to store deltas between probe readings and avg temp
     float avgTemp = 0; //mean temperature
     float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
@@ -126,7 +126,10 @@ static Controller_State_t DoMath_State(void)
         {
             temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
             if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)
+            {
                 ActuatorCommands.fan = FAN_ON; //if any probe exceeds treshold, turn on internal fan
+                break;
+            }
             else ActuatorCommands.fan = FAN_OFF;
         }
 
