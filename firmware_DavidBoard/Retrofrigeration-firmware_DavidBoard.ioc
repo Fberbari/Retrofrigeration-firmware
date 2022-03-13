@@ -28,6 +28,7 @@ NVIC.NonMaskableInt_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:true
 NVIC.PendSV_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:true
 NVIC.SVC_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:true
 NVIC.SysTick_IRQn=true\:3\:0\:false\:false\:true\:false\:true\:true
+NVIC.TIM3_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
 PA11\ [PA9].Mode=I2C
 PA11\ [PA9].Signal=I2C2_SCL
 PA12\ [PA10].Mode=I2C
