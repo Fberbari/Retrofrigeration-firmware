@@ -28,6 +28,7 @@ static ActuatorCommands_t ActuatorCommands;
 
 static Controller_State_t currentState;
 static bool periodHasPassed;
+static temp_probe_readings_t temp_probe_readings;
 
 /***********************************************************************************************************************
  * Prototypes
@@ -105,7 +106,47 @@ static Controller_State_t LogData_State(void)
 
 static Controller_State_t DoMath_State(void)
 {
-    return CTRL_ACTUATE_FRIDGE;
+    static float loopCounter;
+    static float comp_off_counter;
+    //get 5 temp readings
+    float temps[5] = {temp_probe_readings.t1, temp_probe_readings.t2, temp_probe_readings.t3, temp_probe_readings.t4, temp_probe_readings.t5}; //5 temp probe readings
+    float temp_diffs[5]; //to store deltas between probe readings and avg temp
+    float avgTemp = 0; //mean temperature
+    float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
+
+    for (int i=0, i<5; i++)
+        avgTemp += temps[i] / 5; //calculate mean temp
+
+    //fan control
+    if(loopCounter % 100 ==0) //every 2 seconds
+        for (int i=0, i<5; i++)
+        {
+            temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
+            if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)
+            {
+                ActuatorCommands.fan = FAN_ON; //if any probe exceeds treshold, turn on internal fan
+                break;
+            }
+            else ActuatorCommands.fan = FAN_OFF;
+        }
+
+    //compressor control
+    if (avgTemp > 3 && comp_off_counter >= 50*75) //on at 3C if off for at least 75s
+    {
+        loopCounter =0; //reset loop counter every so often to avoid overflow
+        ActuatorCommands.compressor = COMPRESSOR_ON;
+    }
+
+    else if (avgTemp < 1) //off at 1C
+    {
+        ActuatorCommands.compressor = COMPRESSOR_OFF;
+        comp_off_counter =0; //reset compressor off counter since compressor is switched off
+    }
+
+    //increment both counters
+    loopCounter++;
+    comp_off_counter++;
+    return CTRL_ACTUATE_FRIDGE;;
 }
 
 static Controller_State_t ActuateFridge_State(void)
