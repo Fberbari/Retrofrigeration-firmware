@@ -12,7 +12,15 @@
 /***********************************************************************************************************************
  * Definitions
  **********************************************************************************************************************/
-
+typedef struct
+{
+    //5 probe readings in degrees celsius
+    float t1;
+    float t2;
+    float t3;
+    float t4;
+    float t5;
+}temp_probe_readings_t;
 #define CTRL_LOOP_FREQUENCY 50  // Hz
 
 
