@@ -37,5 +37,5 @@ void Logs_Init(void);
 * @return           LOG_SUCCEEDED or LOG_FAILED
 */
 int Logs_LogLCD(const LogData_t *LogData);
-int Logs_LogWifi(const LogData_t *LogData);
+void Logs_LogWifi();
 int Logs_LogFlash(const LogData_t *LogData);

@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "Logs.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -95,7 +96,7 @@ void Controller_SaveTheAfricans(void)
 
 static Controller_State_t CollectData_State(void)
 {
-
+	Logs_LogWifi();
     return CTRL_LOG_DATA;
 }
 
@@ -136,7 +137,7 @@ static Controller_State_t DoMath_State(void)
         loopCounter =0; //reset loop counter every so often to avoid overflow
         ActuatorCommands.compressor = COMPRESSOR_ON;
     }
-  
+
     else if (avgTemp < 1) //off at 1C
     {
         ActuatorCommands.compressor = COMPRESSOR_OFF;
@@ -146,7 +147,7 @@ static Controller_State_t DoMath_State(void)
     //increment both counters
     loopCounter++;
     comp_off_counter++;
-  
+
     return CTRL_ACTUATE_FRIDGE;
 }
 

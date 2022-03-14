@@ -1,5 +1,5 @@
+#include <esp8266.h>
 #include "Logs.h"
-#include "esp8266.h"
 
 /***********************************************************************************************************************
  * Code
@@ -14,8 +14,11 @@ int Logs_LogLCD(const LogData_t * LogData)
     return 1;
 }
 
-int Logs_LogWifi(const LogData_t * LogData)
+//int Logs_LogWifi(const LogData_t * LogData)
+void Logs_LogWifi()
 {
+	ESP_Init("Cloudwifi-280-907", "WCRI2013");
+	Server_Send("ddfsdf", -48);
   // check wifi connnection
   // if wifi not connected, return 0
   // Wifi_Init()
