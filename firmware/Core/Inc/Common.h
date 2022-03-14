@@ -3,6 +3,7 @@
 #include "main.h"
 
 #include <stdbool.h>
+#include <math.h>
 
 /**
  * This module holds any definitions, structures, functions or otherwise

@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <math.h>
 /**
  * This module holds any definitions, structures, functions or otherwise
  * that are useful to a multitude of other modules.
