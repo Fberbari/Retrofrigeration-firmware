@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "Flash.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -22,6 +23,10 @@ typedef enum state
 
 // HAL handles. These should all be extern, as they are defined and initialized by cubeMX (the code generation tool) in main.c
 extern TIM_HandleTypeDef htim2;
+
+// global structures
+static DataBuffer_t DataBuffer;
+static SystemOutputState_t SystemOutputState;
 
 // state input/output data
 static ActuatorCommands_t ActuatorCommands;
@@ -100,6 +105,13 @@ static Controller_State_t CollectData_State(void)
 
 static Controller_State_t LogData_State(void)
 {
+	int r = Flash_LogData(&DataBuffer);
+
+	if (r != RETROFRIGERATION_SUCCEEDED)
+	{
+		return CTRL_FAILED;
+	}
+
     return CTRL_DO_MATH;
 }
 
