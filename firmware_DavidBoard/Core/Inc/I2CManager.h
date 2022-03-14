@@ -22,8 +22,8 @@ typedef struct
 
 }ThermistorADC_t;
 
-#define BUTTON_OPEN 0
-#define BUTTON_PRESSED 1
+#define BUTTON_PRESSED 0
+#define BUTTON_OPEN 1
 
 typedef struct
 {
@@ -75,7 +75,7 @@ int I2CManager_GetPushButtonStates(PushButtonStates_t *PushButtonStates);
 int I2CManager_SendActuatorCommands(const ActuatorCommands_t *ActuatorCommands);
 
 
-// TOO Jacob to add LCD function
+// TOO add LCD function
 
 
 /**
