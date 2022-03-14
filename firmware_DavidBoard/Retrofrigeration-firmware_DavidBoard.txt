@@ -1,0 +1,56 @@
+Configuration	Retrofrigeration-firmware_DavidBoard
+STM32CubeMX 	6.5.0
+Date	03/14/2022
+MCU	STM32G030F6Px
+
+
+
+PERIPHERALS	MODES	FUNCTIONS	PINS
+I2C2	I2C	I2C2_SCL	PA11 [PA9]
+I2C2	I2C	I2C2_SDA	PA12 [PA10]
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+TIM3	Internal Clock	TIM3_VS_ClockSourceINT	VP_TIM3_VS_ClockSourceINT
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+16	PA11 [PA9]	I2C2_SCL	
+17	PA12 [PA10]	I2C2_SDA	
+PERIPHERALS	MODES	FUNCTIONS	PINS
+I2C2	I2C	I2C2_SCL	PA11 [PA9]
+I2C2	I2C	I2C2_SDA	PA12 [PA10]
+SYS	SysTick	SYS_VS_Systick	VP_SYS_VS_Systick
+TIM3	Internal Clock	TIM3_VS_ClockSourceINT	VP_TIM3_VS_ClockSourceINT
+
+
+
+Pin Nb	PINs	FUNCTIONs	LABELs
+16	PA11 [PA9]	I2C2_SCL	
+17	PA12 [PA10]	I2C2_SDA	
+
+
+
+SOFTWARE PROJECT
+
+Project Settings : 
+Project Name : Retrofrigeration-firmware_DavidBoard
+Project Folder : C:\Users\ejren\STM32CubeIDE\workspace_1.9.0\Retrofrigeration-firmware_DavidBoard
+Toolchain / IDE : STM32CubeIDE
+Firmware Package Name and Version : STM32Cube FW_G0 V1.5.0
+
+
+Code Generation Settings : 
+STM32Cube MCU packages and embedded software packs : Copy only the necessary library files
+Generate peripheral initialization as a pair of '.c/.h' files per peripheral : No
+Backup previously generated files when re-generating : No
+Delete previously generated files when not re-generated : Yes
+Set all free pins as analog (to optimize the power consumption) : No
+
+
+Toolchains Settings : 
+Compiler Optimizations : 
+
+
+
+
+

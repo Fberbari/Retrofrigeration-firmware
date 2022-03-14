@@ -30,11 +30,12 @@ void ESP_Init (char *SSID, char *PASSWD)
 	/********* AT **********/
 	Uart_flush(wifi_uart);
 	Uart_sendstring("AT\r\n", wifi_uart);
+	Uart_sendstring("AT\r\n", wifi_uart);
 	while(!(Wait_for("OK\r\n", wifi_uart)));
 
 	/********* AT+CWMODE=1 **********/
 	Uart_flush(wifi_uart);
-	Uart_sendstring("AT+CWMODE=1\r\n", wifi_uart);
+	Uart_sendstring("AT+CWMODE=3\r\n", wifi_uart);
 	while (!(Wait_for("OK\r\n", wifi_uart)));
 
 	/********* AT+CWJAP="SSID","PASSWD" **********/
