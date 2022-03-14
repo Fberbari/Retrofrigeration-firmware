@@ -136,6 +136,7 @@ static Controller_State_t DoMath_State(void)
         loopCounter =0; //reset loop counter every so often to avoid overflow
         ActuatorCommands.compressor = COMPRESSOR_ON;
     }
+  
     else if (avgTemp < 1) //off at 1C
     {
         ActuatorCommands.compressor = COMPRESSOR_OFF;
@@ -145,6 +146,7 @@ static Controller_State_t DoMath_State(void)
     //increment both counters
     loopCounter++;
     comp_off_counter++;
+  
     return CTRL_ACTUATE_FRIDGE;
 }
 
