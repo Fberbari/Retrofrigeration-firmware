@@ -106,20 +106,20 @@ static Controller_State_t LogData_State(void)
 
 static Controller_State_t DoMath_State(void)
 {
-    static int loopCounter;
-    static int comp_off_counter;
+    static float loopCounter;
+    static float comp_off_counter;
     //get 5 temp readings
     float temps[5] = {temp_probe_readings.t1, temp_probe_readings.t2, temp_probe_readings.t3, temp_probe_readings.t4, temp_probe_readings.t5}; //5 temp probe readings
     float temp_diffs[5]; //to store deltas between probe readings and avg temp
     float avgTemp = 0; //mean temperature
     float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
 
-    for (int i=0; i<5; i++)
-        avgTemp += 0.2*temps[i]; //calculate mean temp
+    for (int i=0, i<5; i++)
+        avgTemp += temps[i] / 5; //calculate mean temp
 
     //fan control
     if(loopCounter % 100 ==0) //every 2 seconds
-        for (int i=0; i<5; i++)
+        for (int i=0, i<5; i++)
         {
             temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
             if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)
@@ -136,7 +136,7 @@ static Controller_State_t DoMath_State(void)
         loopCounter =0; //reset loop counter every so often to avoid overflow
         ActuatorCommands.compressor = COMPRESSOR_ON;
     }
-  
+
     else if (avgTemp < 1) //off at 1C
     {
         ActuatorCommands.compressor = COMPRESSOR_OFF;
@@ -146,8 +146,7 @@ static Controller_State_t DoMath_State(void)
     //increment both counters
     loopCounter++;
     comp_off_counter++;
-  
-    return CTRL_ACTUATE_FRIDGE;
+    return CTRL_ACTUATE_FRIDGE;;
 }
 
 static Controller_State_t ActuateFridge_State(void)
