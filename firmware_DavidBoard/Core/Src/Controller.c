@@ -1,6 +1,8 @@
 #include "Controller.h"
 #include "I2CManager.h"
 #include "UserMenu.h"
+#include "Flash.h"
+
 
 /***********************************************************************************************************************
  * Definitions
@@ -56,6 +58,9 @@ void Controller_Init(void)
 {
     // let things settle
     HAL_Delay(1000);
+
+    Actuators_Init();
+    Flash_Init();
 
     StartPeriodTimer();
 
