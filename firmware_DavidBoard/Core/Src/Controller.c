@@ -1,5 +1,4 @@
 #include "Controller.h"
-#include "Actuators.h"
 #include "I2CManager.h"
 #include "UserMenu.h"
 
@@ -57,8 +56,6 @@ void Controller_Init(void)
 {
     // let things settle
     HAL_Delay(1000);
-
-    Actuators_Init();
 
     StartPeriodTimer();
 
@@ -177,12 +174,7 @@ static Controller_State_t DoMath_State(void)
 
 static Controller_State_t ActuateFridge_State(void)
 {
-    int r = Actuators_ActuateSystem(&ActuatorCommands);
-
-    if (r != RETROFRIGERATION_SUCCEEDED)
-    {
-        return CTRL_FAILED;
-    }
+    I2CManager_SendActuatorCommands(&ActuatorCommands);
 
     return CTRL_WAIT_FOR_TIMER;
 }
