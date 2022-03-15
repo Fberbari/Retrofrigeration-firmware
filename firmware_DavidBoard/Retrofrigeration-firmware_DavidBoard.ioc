@@ -1,8 +1,8 @@
 #MicroXplorer Configuration settings - do not modify
 File.Version=6
 I2C2.IPParameters=Speed,Timing
-I2C2.Speed=100
-I2C2.Timing=0x00303D5B
+I2C2.Speed=50
+I2C2.Timing=0x00303DFB
 KeepUserPlacement=false
 Mcu.CPN=STM32G030F6P6
 Mcu.Family=STM32G0

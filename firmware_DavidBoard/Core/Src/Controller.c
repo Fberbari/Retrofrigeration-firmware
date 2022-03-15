@@ -50,6 +50,8 @@ static Controller_State_t Failed_State(void);
 
 void Controller_Init(void)
 {
+	HAL_Delay(100);
+
     Actuators_Init();
 
     StartPeriodTimer();
@@ -57,6 +59,8 @@ void Controller_Init(void)
     I2CManager_Init();
 
     currentState = CTRL_COLLECT_DATA;
+
+    HAL_Delay(1000);
 }
 
 void Controller_SaveTheAfricans(void)
@@ -104,7 +108,7 @@ static Controller_State_t CollectData_State(void)
 
 static Controller_State_t LogData_State(void)
 {
-    I2CManager_SendToLCD("ANTHONY");
+    I2CManager_SendToLCD("Save Africa !");
     I2CManager_LaunchExchange();
     return CTRL_DO_MATH;
 }

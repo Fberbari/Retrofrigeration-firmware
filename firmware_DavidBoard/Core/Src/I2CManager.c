@@ -286,20 +286,20 @@ static int ExecuteLCDExchange(void)
 {
     static int currentIndex = -1;
 
-    if (currentIndex == -1)
+    if (currentIndex < 0)
     {
-        LCDSendCommandIT(LCD_CLEAR_CMD);
         currentIndex ++;
+        LCDSendCommandIT(LCD_CLEAR_CMD);
     }
-    else if (currentIndex == 16)
+    else if (strToWrite[currentIndex] == '\0')
     {
         currentIndex = -1;
         return LCD_EXCHANGE_COMPLETE;
     }
     else
     {
-        LCDSendDataIT(strToWrite[currentIndex]);
         currentIndex ++;
+        LCDSendDataIT(strToWrite[currentIndex - 1]);
     }
 
     return LCD_EXCHANGE_IN_PROGRESS;
