@@ -54,6 +54,7 @@ static Controller_State_t Failed_State(void);
 void Controller_Init(void)
 {
     Actuators_Init();
+    Flash_Init();
 
     StartPeriodTimer();
 
@@ -138,7 +139,7 @@ static Controller_State_t WaitForTimer_State(void)
     {
         periodHasPassed = false;
 
-        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+        //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
         return CTRL_COLLECT_DATA;
     }
