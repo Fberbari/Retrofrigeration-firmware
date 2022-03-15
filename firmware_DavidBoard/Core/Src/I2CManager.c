@@ -58,7 +58,7 @@ static bool IOExpand1ReadDataNew;
 static uint8_t IOExpand1WriteData;
 static bool IOExpand1DataWritten;
 
-static char[33] strToWrite;
+static char strToWrite[33];
 static bool strHasBeenWritten;
 
 static I2CBusStatus_t currentBusStatus;
@@ -75,6 +75,10 @@ static void LaunchIOExpand1ReadExchange(void);
 static void LaunchIOExpand1WriteExchange(void);
 
 static void InitLCD(void);
+static int ExecuteLCDExchange(void);
+static void LCDSendCommandPolling(uint8_t cmd);
+static void LCDSendCommandIT(uint8_t cmd);
+static void LCDSendDataIT(char data);
 
 /***********************************************************************************************************************
  * Code
@@ -91,6 +95,7 @@ void I2CManager_Init(void)
 
     InitAdc();
     InitIOExpand1();
+    InitLCD();
 }
 
 int I2CManager_GetRawThermistorADC(ThermistorADC_t *ThermistorADC)
@@ -216,20 +221,22 @@ int I2CManager_LaunchExchange(void)
 
 	currentBusStatus = BUSY_IOEXPAND_1_READING;
 
-    LaunchIOExpand1ReadExchange();
+	LaunchIOExpand1ReadExchange();
+
+    return RETROFRIGERATION_SUCCEEDED;
 }
 
 static void InitAdc(void)
 {
     uint8_t data[2] = {ADC_SETUP_BYTE, ADC_CONFIG_BYTE};
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c2, ADC_SLAVE_ADDRESS_W, data, sizeof(data), DEFAULT_TIMEOUT);
+    HAL_I2C_Master_Transmit(&hi2c2, ADC_SLAVE_ADDRESS_W, data, sizeof(data), DEFAULT_TIMEOUT);
 }
 
 static void InitIOExpand1(void)
 {
     // sets all inputs to weak high. Outputs set to 0 to start.
     uint8_t data = 0xf8;
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_W, &data, sizeof(data), DEFAULT_TIMEOUT);
+    HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_W, &data, sizeof(data), DEFAULT_TIMEOUT);
 
 }
 
@@ -261,17 +268,12 @@ static void InitLCD(void)
 
 static void LaunchADCExchange(void)
 {
-    if(currentBusStatus != READY)
-    {
-        return;
-    }
-
     HAL_I2C_Master_Receive_IT(&hi2c2, ADC_SLAVE_ADDRESS_R, rawAdcData, sizeof(rawAdcData));
 }
 
 static void LaunchIOExpand1ReadExchange(void)
 {
-	HAL_StatusTypeDef status = HAL_I2C_Master_Receive_IT(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_R, &rawIOExpand1ReadData, sizeof(rawIOExpand1ReadData));
+	HAL_I2C_Master_Receive_IT(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_R, &rawIOExpand1ReadData, sizeof(rawIOExpand1ReadData));
 }
 
 static void LaunchIOExpand1WriteExchange(void)
@@ -289,14 +291,14 @@ static int ExecuteLCDExchange(void)
         LCDSendCommandIT(LCD_CLEAR_CMD);
         currentIndex ++;
     }
-    else if (currentIndex == 32)
+    else if (currentIndex == 16)
     {
         currentIndex = -1;
         return LCD_EXCHANGE_COMPLETE;
     }
     else
     {
-        LCDSendDataIT(strToWrite[currentIndex])
+        LCDSendDataIT(strToWrite[currentIndex]);
         currentIndex ++;
     }
 
@@ -358,16 +360,27 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
             LaunchIOExpand1WriteExchange();
             break;
 
-        case BUSY_IOEXPAND_1_WRITING:
-            IOExpand1DataWritten = true;
-            currentBusStatus = BUSY_ADC;
-            LaunchADCExchange();
-            break;
-
         case BUSY_ADC:
             ExecuteLCDExchange();
             adcDataNew = true;
             currentBusStatus = BUSY_LCD;
+            break;
+
+        default:
+            currentBusStatus = FAILED;
+            break;
+    }
+}
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    switch(currentBusStatus)
+    {
+
+        case BUSY_IOEXPAND_1_WRITING:
+            IOExpand1DataWritten = true;
+            currentBusStatus = BUSY_ADC;
+            LaunchADCExchange();
             break;
 
         case BUSY_LCD:

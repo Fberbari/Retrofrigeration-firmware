@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "I2CManager.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -53,6 +54,8 @@ void Controller_Init(void)
 
     StartPeriodTimer();
 
+    I2CManager_Init();
+
     currentState = CTRL_COLLECT_DATA;
 }
 
@@ -101,6 +104,8 @@ static Controller_State_t CollectData_State(void)
 
 static Controller_State_t LogData_State(void)
 {
+    I2CManager_SendToLCD("ANTHONY");
+    I2CManager_LaunchExchange();
     return CTRL_DO_MATH;
 }
 
