@@ -110,6 +110,9 @@ static Controller_State_t CollectData_State(void)
 {
     I2CManager_GetPushButtonStates(&PushButtonStates);
 
+    static ThermistorADC_t ThermADCValues;
+    I2CManager_GetRawThermistorADC(ThermADCValues);
+    
     return CTRL_LOG_DATA;
 }
 
