@@ -63,6 +63,9 @@
 * Initializes internal parameters.
 * Should be called exactly once before anything is attempted to be done with this module.
 * Failing to call this function, or calling it more than once, voids all guarantees made by this module.
+* Notes for configuring SPI in IOC:
+* - do not use NSS, use a dedicated GPIO for CS
+* - make sure that "data size" is set to 8 bits
 */
 void Flash_Init(void);
 
