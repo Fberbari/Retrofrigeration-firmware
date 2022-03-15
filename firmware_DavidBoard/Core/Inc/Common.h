@@ -25,10 +25,11 @@ typedef struct
     float temperature[4];		// 16 bytes; read via MAX11609 ADC
     bool buttonIsClicked[4];	// 4 bytes; read via PCF8574 IO expander
 
-    //system outputs
+    //system status flags
     bool batteryIsCharging;		// 1 byte;
     bool compressorIsOn;		// 1 byte;
     bool fanIsOn;				// 1 byte;
+    bool usbIsRequestingData;	// 1 byte;
 } DataBuffer_t;
 
 

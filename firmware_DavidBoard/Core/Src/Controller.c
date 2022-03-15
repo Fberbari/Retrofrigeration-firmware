@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "Flash.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -50,6 +51,7 @@ static Controller_State_t Failed_State(void);
 void Controller_Init(void)
 {
     Actuators_Init();
+    Flash_Init();
 
     StartPeriodTimer();
 
