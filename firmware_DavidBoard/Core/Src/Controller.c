@@ -1,8 +1,8 @@
 #include "Controller.h"
+
 #include "I2CManager.h"
 #include "UserMenu.h"
 #include "Flash.h"
-
 
 /***********************************************************************************************************************
  * Definitions
