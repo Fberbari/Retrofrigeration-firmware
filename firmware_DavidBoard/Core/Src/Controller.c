@@ -1,5 +1,7 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "I2CManager.h"
+#include "UserMenu.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -29,6 +31,10 @@ static ActuatorCommands_t ActuatorCommands;
 static Controller_State_t currentState;
 static bool periodHasPassed;
 static DataBuffer_t DataBuffer;
+static PushButtonStates_t PushButtonStates;
+
+static float avgTemp;
+
 
 /***********************************************************************************************************************
  * Prototypes
@@ -49,9 +55,19 @@ static Controller_State_t Failed_State(void);
 
 void Controller_Init(void)
 {
+    // let things settle
+    HAL_Delay(1000);
+
     Actuators_Init();
 
     StartPeriodTimer();
+
+    I2CManager_Init();
+
+    UserMenu_Init();
+
+    // let things settle
+    HAL_Delay(1000);
 
     currentState = CTRL_COLLECT_DATA;
 }
@@ -95,12 +111,21 @@ void Controller_SaveTheAfricans(void)
 
 static Controller_State_t CollectData_State(void)
 {
+    I2CManager_GetPushButtonStates(&PushButtonStates);
 
     return CTRL_LOG_DATA;
 }
 
 static Controller_State_t LogData_State(void)
 {
+    char LCDString[16];
+
+    UserMenu_DetermineLCDString(&PushButtonStates, avgTemp, LCDString);
+
+    I2CManager_SendToLCD(LCDString);
+
+    I2CManager_LaunchExchange();
+
     return CTRL_DO_MATH;
 }
 
@@ -111,7 +136,7 @@ static Controller_State_t DoMath_State(void)
     //get 5 temp readings
     float temps[5] = {DataBuffer.temperature[0], DataBuffer.temperature[1], DataBuffer.temperature[2], DataBuffer.temperature[3], DataBuffer.temperature[4]}; //5 temp probe readings
     float temp_diffs[5]; //to store deltas between probe readings and avg temp
-    float avgTemp = 0; //mean temperature
+    avgTemp = 0; //mean temperature
     float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
 
     for (int i=0; i<5; i++)

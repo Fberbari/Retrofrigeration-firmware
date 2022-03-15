@@ -22,16 +22,6 @@ typedef struct
 
 }ThermistorADC_t;
 
-#define BUTTON_PRESSED 0
-#define BUTTON_OPEN 1
-
-typedef struct
-{
-    int button[4];  // each element corresponds to a button state. Legal states are BUTTON_OPEN and BUTTON_PRESSED
-
-}PushButtonStates_t;
-
-
 /***********************************************************************************************************************
  * Prototypes
  **********************************************************************************************************************/
@@ -77,8 +67,8 @@ int I2CManager_SendActuatorCommands(const ActuatorCommands_t *ActuatorCommands);
 
 /**
 * Displays the requested string on the LCD.
-* The string must be at most 32 characters long, not including the null terminator.
-* The first 16 characters will be displayed on the top row of the LCD, the others will be displayed on the bottom row.
+* The string must be at most 15 characters long, not including the null terminator.
+* Characters will only be displayed on the top row.
 * The string must end with the null terminator. Otherwise, undefined behavior will occur.
 * Returns succeeded if the PREVIOUS transmission succeeded, failed if the previous transmission failed,
 * and busy if the previous strings were not yet transmitted. In the case of a busy return, the parameter string will
