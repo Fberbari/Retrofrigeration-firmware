@@ -2,6 +2,7 @@
 #include "Actuators.h"
 #include "I2CManager.h"
 #include "UserMenu.h"
+#include "TemperatureCalc.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -32,6 +33,7 @@ static Controller_State_t currentState;
 static bool periodHasPassed;
 static DataBuffer_t DataBuffer;
 static PushButtonStates_t PushButtonStates;
+static ThermistorADC_t ThermADCValues;
 
 static float avgTemp;
 
@@ -113,8 +115,9 @@ static Controller_State_t CollectData_State(void)
 {
     I2CManager_GetPushButtonStates(&PushButtonStates);
 
-    static ThermistorADC_t ThermADCValues;
-    I2CManager_GetRawThermistorADC(ThermADCValues);
+    I2CManager_GetRawThermistorADC(&ThermADCValues);
+
+    Temperature_ADCtoCelsius(&ThermADCValues, &DataBuffer);
     
     return CTRL_LOG_DATA;
 }
@@ -136,18 +139,18 @@ static Controller_State_t DoMath_State(void)
 {
     static int loopCounter;
     static int comp_off_counter;
-    //get 5 temp readings
-    float temps[5] = {DataBuffer.temperature[0], DataBuffer.temperature[1], DataBuffer.temperature[2], DataBuffer.temperature[3], DataBuffer.temperature[4]}; //5 temp probe readings
-    float temp_diffs[5]; //to store deltas between probe readings and avg temp
+    //get 4 temp readings
+    float temps[4] = {DataBuffer.temperature[0], DataBuffer.temperature[1], DataBuffer.temperature[2], DataBuffer.temperature[3]}; //5 temp probe readings
+    float temp_diffs[4]; //to store deltas between probe readings and avg temp
     avgTemp = 0; //mean temperature
     float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
 
-    for (int i=0; i<5; i++)
-        avgTemp += 0.2*temps[i]; //calculate mean temp
+    for (int i=0; i<4; i++)
+        avgTemp += 0.25*temps[i]; //calculate mean temp
 
     //fan control
     if(loopCounter % 100 ==0) //every 2 seconds
-        for (int i=0; i<5; i++)
+        for (int i=0; i<4; i++)
         {
             temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
             if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)

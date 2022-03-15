@@ -6,6 +6,7 @@
  */
 
 #include "Common.h"
+#include "I2CManager.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -35,5 +36,5 @@
 * @return           Temperature reading in Celsius
 */
 
-double Temperature_ADCtoCelsius(uint16_t ADC_VALUE);
+int TemperatureADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer);
 
