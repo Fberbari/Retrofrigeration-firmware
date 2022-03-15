@@ -36,5 +36,5 @@
 * @return           Temperature reading in Celsius
 */
 
-int TemperatureADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer);
+int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer);
 
