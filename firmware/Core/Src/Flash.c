@@ -1,75 +1,168 @@
-#pragma once
 
 #include "Flash.h"
 
 
-#define sFLASH_WIP_FLAG           0x01  /* Write In Progress (WIP) flag */
-#define sFLASH_DUMMY_BYTE         0xA5
-#define sFLASH_SPI_PAGESIZE       0x100
+extern SPI_HandleTypeDef hspi1;
 
-
-/* GD25D05C SPI Flash supported commands */
-#define sFLASH_CMD_WREN           0x06  /* Write enable instruction */
-#define sFLASH_CMD_WRDI           0x04  /* Write disable instruction */
-
-#define sFLASH_CMD_RDSR           0x05  /* Read Status Register instruction  */
-#define sFLASH_CMD_WRSR           0x01  /* Write Status Register instruction */
-
-#define sFLASH_CMD_READ           0x03  /* read byte instruction */
-#define sFLASH_CMD_READF          0x0B  /* read byte at faster speed instruction */
-#define sFLASH_CMD_DUAL           0x3B  /* Dual Output Fast Read instruction (uses both MISO and MOSI for data) */
-
-#define sFLASH_CMD_PPRO           0x02  /* Page Program instruction */
-
-#define sFLASH_CMD_SE             0x20  /* Sector Erase instruction */
-#define sFLASH_CMD_32BE           0x52  /* 32KB Block Erase instruction */
-#define sFLASH_CMD_64BE           0xD8  /* 64KB Block Erase instruction */
-#define sFLASH_CMD_CE             0x60  /* Chip Erase instruction */
-
-#define sFLASH_CMD_DPD            0xB9  /* Deep Power Down instruction*/
-#define sFLASH_CMD_LDPD           0xAB  /* Leave Deep Power Down instruction*/
-
-#define sFLASH_CMD_REMS           0x90  /* Read Manufacture ID*/
-#define sFLASH_CMD_RDID           0x9F  /* Read Identification */
-#define sFLASH_CMD_RUID           0x4B  /* Read Unique ID */
-
-
-/* SPI Interface pins  */
-
-
-
-
-uint8_t sFLASH_ReadByte(void);
-uint8_t sFLASH_SendByte(uint8_t byte);
-uint16_t sFLASH_SendHalfWord(uint16_t HalfWord);
+static void AssertSlaveSelect(void);
+static void DeassertSlaveSelect(void);
 void sFLASH_WriteEnable(void);
-void sFLASH_WaitForWriteEnd(void);
+void sFLASH_WriteDisable(void);
+
+void sFLASH_WriteBuffer(uint8_t* pBuffer, uint32_t WriteAddr, uint16_t NumByteToWrite);
+void sFLASH_ReadBuffer(uint8_t* pBuffer, uint32_t ReadAddr, uint16_t NumByteToRead);
+
+void sFLASH_ChipErase(void);
 
 void sFLASH_Init(void);
 void sFLASH_EraseSector(uint32_t SectorAddr);
 void sFLASH_EraseBulk(void);
 void sFLASH_WritePage(uint8_t* pBuffer, uint32_t WriteAddr, uint16_t NumByteToWrite);
-void sFLASH_WriteBuffer(uint8_t* pBuffer, uint32_t WriteAddr, uint16_t NumByteToWrite);
-void sFLASH_ReadBuffer(uint8_t* pBuffer, uint32_t ReadAddr, uint16_t NumByteToRead);
+
+
 uint32_t sFLASH_ReadID(void);
 void sFLASH_StartReadSequence(uint32_t ReadAddr);
 
 
 /***********************************************************************************************************************
- * Code
+ * Low Level Functions
  **********************************************************************************************************************/
+static void AssertSlaveSelect(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+    return;
+}
+
+static void DeassertSlaveSelect(void)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+    return;
+}
+
+void sFLASH_WriteEnable(void)
+{
+    uint8_t command_buffer[1] = {sFLASH_CMD_WREN};
+
+    AssertSlaveSelect();
+    HAL_SPI_Transmit (&hspi1, command_buffer, 1, sFLASH_TIMEOUT);
+    DeassertSlaveSelect();
+
+    return;
+}
+
+void sFLASH_WriteDisable(void)
+{
+    uint8_t command_buffer[1] = {sFLASH_CMD_WRDI};
+
+    AssertSlaveSelect();
+    HAL_SPI_Transmit(&hspi1, command_buffer, 1, sFLASH_TIMEOUT);
+    DeassertSlaveSelect();
+
+    return;
+}
+
+void sFLASH_WriteBuffer(uint8_t* pBuffer, uint32_t WriteAddr, uint16_t NumByteToWrite)
+{
+    uint8_t command_buffer[1] = {sFLASH_CMD_PPRO};
+    uint8_t address_buffer[3] = {
+    		(WriteAddr & 0x000000ff) >> 0,
+			(WriteAddr & 0x0000ff00) >> 8,
+			(WriteAddr & 0x00ff0000) >> 16
+    };
+
+	AssertSlaveSelect();
+    HAL_SPI_Transmit(&hspi1, command_buffer, 1, sFLASH_TIMEOUT);
+    HAL_SPI_Transmit(&hspi1, address_buffer, 3, sFLASH_TIMEOUT);
+    HAL_SPI_Transmit(&hspi1, pBuffer, NumByteToWrite, sFLASH_TIMEOUT);
+    DeassertSlaveSelect();
+
+	return;
+}
+
+void sFLASH_ReadBuffer(uint8_t* pBuffer, uint32_t ReadAddr, uint16_t NumByteToRead)
+{
+    uint8_t command_buffer[1] = {sFLASH_CMD_READ};
+    uint8_t address_buffer[3] = {
+    		(ReadAddr & 0x000000ff) >> 0,
+			(ReadAddr & 0x0000ff00) >> 8,
+			(ReadAddr & 0x00ff0000) >> 16
+    };
+
+	AssertSlaveSelect();
+    HAL_SPI_Transmit(&hspi1, command_buffer, 1, sFLASH_TIMEOUT);
+    HAL_SPI_Transmit(&hspi1, address_buffer, 3, sFLASH_TIMEOUT);
+    HAL_SPI_Receive(&hspi1, pBuffer, NumByteToRead, sFLASH_TIMEOUT);
+    DeassertSlaveSelect();
+
+	return;
+}
+
+void sFLASH_ChipErase(void)
+{
+    uint8_t command_buffer[1] = {sFLASH_CMD_CE};
+
+    AssertSlaveSelect();
+    HAL_SPI_Transmit(&hspi1, command_buffer, 1, sFLASH_TIMEOUT);
+    DeassertSlaveSelect();
+
+    return;
+}
+
+/***********************************************************************************************************************
+ * High Level Functions
+ **********************************************************************************************************************/
+
 
 void Flash_Init(void)
 {
+	sFLASH_WriteEnable();
 	return;
 }
 
 int Flash_LogData(const DataBuffer_t *DataBuffer)
 {
+	static bool flash_has_been_read = false;
+	static uint8_t read_value;
+
+	if(!flash_has_been_read)
+	{
+		uint8_t write_buffer[1] = {0xAE};
+		uint8_t read_buffer[1];
+		uint32_t address = 0x0;
+
+		sFLASH_WriteBuffer(write_buffer, address, 1);
+		HAL_Delay(20);
+		sFLASH_ReadBuffer(read_buffer, address, 1);
+
+
+		read_value = read_buffer[0];
+		//read_value = 0xAE;
+		flash_has_been_read = true;
+	}
+
+
+	if(read_value & 0x1)
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+	}
+	read_value = read_value >> 1;
+	if(!read_value)
+	{
+		flash_has_been_read = false;
+	}
+
     return RETROFRIGERATION_SUCCEEDED;
 }
 
 int Flash_PassDataToUSB(void)
 {
-	return;
+	return 0;
 }
+
+
+
+
