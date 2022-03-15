@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "cstdint": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}
