@@ -18,13 +18,21 @@
  **********************************************************************************************************************/
 typedef struct
 {
-    //5 probe readings in degrees celsius
-    float t1;
-    float t2;
-    float t3;
-    float t4;
-    float t5;
-}temp_probe_readings_t;
+	//system inputs
+    bool mainsFailed;			// 1 byte; read via the TPS2113 status
+    bool batteryDoneCharging;	// 1 byte; read via PCF8574 IO expander
+    float batteryVoltage;		// 4 bytes; read via MAX11609 ADC
+    float temperature[4];		// 16 bytes; read via MAX11609 ADC
+    bool buttonIsClicked[4];	// 4 bytes; read via PCF8574 IO expander
+
+    //system outputs
+    bool batteryIsCharging;		// 1 byte;
+    bool compressorIsOn;		// 1 byte;
+    bool fanIsOn;				// 1 byte;
+} DataBuffer_t;
+
+
+
 #define CTRL_LOOP_FREQUENCY 50  // Hz
 
 
