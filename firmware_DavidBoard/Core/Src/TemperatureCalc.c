@@ -34,14 +34,14 @@ static int R1000int;
  * Prototypes
  **********************************************************************************************************************/
 
-int TemperatureADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer);
+int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer);
 
 
 /***********************************************************************************************************************
  * Code
  **********************************************************************************************************************/
 
-int TemperatureADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer)
+int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer)
 {
     /* //used for min/max/avg - not needed if these calcs are done downstream
     double temperatureMin = 0;
