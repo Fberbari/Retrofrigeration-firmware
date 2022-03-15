@@ -1,5 +1,7 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "I2CManager.h"
+#include "UserMenu.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -29,6 +31,8 @@ static ActuatorCommands_t ActuatorCommands;
 static Controller_State_t currentState;
 static bool periodHasPassed;
 static DataBuffer_t DataBuffer;
+static PushButtonStates_t PushButtonStates;
+
 
 /***********************************************************************************************************************
  * Prototypes
@@ -49,9 +53,19 @@ static Controller_State_t Failed_State(void);
 
 void Controller_Init(void)
 {
+    // let things settle
+    HAL_Delay(1000);
+
     Actuators_Init();
 
     StartPeriodTimer();
+
+    I2CManager_Init();
+
+    UserMenu_Init();
+
+    // let things settle
+    HAL_Delay(1000);
 
     currentState = CTRL_COLLECT_DATA;
 }
@@ -95,12 +109,20 @@ void Controller_SaveTheAfricans(void)
 
 static Controller_State_t CollectData_State(void)
 {
+    I2CManager_GetPushButtonStates(&PushButtonStates);
 
     return CTRL_LOG_DATA;
 }
 
 static Controller_State_t LogData_State(void)
 {
+    char LCDString[16];
+
+    UserMenu_DetermineLCDString(&PushButtonStates, 7, LCDString);
+    I2CManager_SendToLCD(LCDString);
+
+    I2CManager_LaunchExchange();
+
     return CTRL_DO_MATH;
 }
 

@@ -56,3 +56,19 @@ typedef struct
     int compressor;   // either COMPRESSOR_ON or COMPRESSOR_OFF (all other values illegal)
 
 }ActuatorCommands_t;
+
+#define BUTTON_PRESSED 0
+#define BUTTON_OPEN 1
+
+typedef struct
+{
+    int button[4];  // each element corresponds to a button state. Legal states are BUTTON_OPEN and BUTTON_PRESSED
+
+}PushButtonStates_t;
+
+typedef struct
+{
+    int setTemp;
+    int tempBoundLow;
+    int tempBoundHigh;
+}UserSettings_t;
