@@ -29,6 +29,6 @@ void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int
 
 /**
 * Returns the user requested temperature and temperature bounds.
-* @param[out]       UserSettings           Struct containing the user settings.
+* @param[out]       OutputUserSettings           Struct containing the user settings.
 */
-void UserMenu_GetUserSettings(UserSettings_t *UserSettings);
+void UserMenu_GetUserSettings(UserSettings_t *OutputUserSettings);

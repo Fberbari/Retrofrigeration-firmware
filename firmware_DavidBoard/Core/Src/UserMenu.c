@@ -30,6 +30,7 @@ typedef struct
 
 static Menu_State_t CurrentMenuState;
 static ButtonNewlyPressed_t ButtonNewlyPressed;
+static UserSettings_t UserSettings;
 
 /***********************************************************************************************************************
  * Prototypes
@@ -60,6 +61,9 @@ void UserMenu_Init(void)
 
     fridgeCurrentTemp = 7;
 
+    UserSettings.setTemp = 7;
+    UserSettings.tempBoundLow = -30;
+    UserSettings.tempBoundHigh = 30;
 }
 
 
@@ -68,6 +72,11 @@ void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int
     ButtonPressedSinceLastCall(PushButtonStates);
 
     fridgeCurrentTemp = currentTemp;
+
+    if ((fridgeCurrentTemp > UserSettings.tempBoundHigh) || (fridgeCurrentTemp < UserSettings.tempBoundLow))
+    {
+        CurrentMenuState = MENU_TEMP_ERROR;
+    }
 
     Menu_State_t nextState;
     switch(CurrentMenuState)
@@ -101,14 +110,15 @@ void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int
 }
 
 
-void UserMenu_GetUserSettings(UserSettings_t *UserSettings)
+void UserMenu_GetUserSettings(UserSettings_t *OutputUserSettings)
 {
-
+    *OutputUserSettings = UserSettings;
 }
 
 static void ButtonPressedSinceLastCall(const PushButtonStates_t *PushButtonStates)
 {
     static int i;
+    static PushButtonStates_t PreviousPushButtonStates;
 
     // Don't do anything for a bit to let things stabilize.
     if(i < 10)
@@ -116,10 +126,6 @@ static void ButtonPressedSinceLastCall(const PushButtonStates_t *PushButtonState
         i++;
         return;
     }
-
-
-
-    static PushButtonStates_t PreviousPushButtonStates = {BUTTON_OPEN, BUTTON_OPEN, BUTTON_OPEN, BUTTON_OPEN};
 
     ButtonNewlyPressed.up = false;
     ButtonNewlyPressed.down = false;
@@ -164,24 +170,46 @@ static Menu_State_t MenuMain_State(char *outputString)
 
 static Menu_State_t MenuSetTemp_State(char *outputString)
 {
-    snprintf(outputString, 16, "Set Temp: 8C");
+    snprintf(outputString, 16, "Set Temp: %dC", UserSettings.setTemp);
 
-    if(ButtonNewlyPressed.right)
+
+    if (ButtonNewlyPressed.right)
     {
         return MENU_SET_LOW_BOUND;
     }
 
-    else if(ButtonNewlyPressed.left)
+    else if (ButtonNewlyPressed.left)
     {
         return MENU_MAIN;
     }
+
+    if (ButtonNewlyPressed.up)
+    {
+        UserSettings.setTemp ++;
+    }
+
+    else if (ButtonNewlyPressed.down)
+    {
+        UserSettings.setTemp --;
+    }
+
+    if (UserSettings.tempBoundLow >= UserSettings.setTemp)
+    {
+        UserSettings.tempBoundLow = UserSettings.setTemp - 1;
+    }
+    else if (UserSettings.tempBoundHigh <= UserSettings.setTemp)
+    {
+        UserSettings.tempBoundHigh = UserSettings.setTemp + 1;
+    }
+
+    snprintf(outputString, 16, "Set Temp: %dC", UserSettings.setTemp);
 
     return MENU_SET_TEMP;
 }
 
 static Menu_State_t MenuSetLowBound_State(char *outputString)
 {
-    snprintf(outputString, 16, "Low Bound: 5C");
+    snprintf(outputString, 16, "Low Bound: %dC", UserSettings.tempBoundLow);
 
     if(ButtonNewlyPressed.right)
     {
@@ -192,12 +220,29 @@ static Menu_State_t MenuSetLowBound_State(char *outputString)
         return MENU_SET_TEMP;
     }
 
+    if (ButtonNewlyPressed.up)
+    {
+        UserSettings.tempBoundLow ++;
+    }
+
+    else if (ButtonNewlyPressed.down)
+    {
+        UserSettings.tempBoundLow --;
+    }
+
+    if (UserSettings.tempBoundLow >= UserSettings.setTemp )
+    {
+        UserSettings.tempBoundLow = UserSettings.setTemp - 1;
+    }
+
+    snprintf(outputString, 16, "Low Bound: %dC", UserSettings.tempBoundLow);
+
     return MENU_SET_LOW_BOUND;
 }
 
 static Menu_State_t MenuSetUpBound_State(char *outputString)
 {
-    snprintf(outputString, 16, "High bound: 9C");
+    snprintf(outputString, 16, "High Bound: %dC", UserSettings.tempBoundHigh);
 
     if(ButtonNewlyPressed.right)
     {
@@ -208,10 +253,36 @@ static Menu_State_t MenuSetUpBound_State(char *outputString)
         return MENU_SET_LOW_BOUND;
     }
 
+    if (ButtonNewlyPressed.up)
+    {
+        UserSettings.tempBoundHigh ++;
+    }
+
+    else if (ButtonNewlyPressed.down)
+    {
+        UserSettings.tempBoundHigh --;
+    }
+
+    else if (UserSettings.tempBoundHigh <= UserSettings.setTemp)
+    {
+        UserSettings.tempBoundHigh = UserSettings.setTemp + 1;
+    }
+
+    snprintf(outputString, 16, "High Bound: %dC", UserSettings.tempBoundHigh);
+
     return MENU_SET_UP_BOUND;
 }
 
 static Menu_State_t MenuTempError_State(char *outputString)
 {
-snprintf(outputString, 16, "Error");
+    if (fridgeCurrentTemp > UserSettings.tempBoundHigh)
+    {
+        snprintf(outputString, 16, "Temp too high!");
+    }
+    else if (fridgeCurrentTemp < UserSettings.tempBoundLow)
+    {
+        snprintf(outputString, 16, "Temp too low!");
+    }
+
+    return MENU_MAIN;
 }

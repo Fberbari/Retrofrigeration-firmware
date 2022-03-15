@@ -33,6 +33,8 @@ static bool periodHasPassed;
 static DataBuffer_t DataBuffer;
 static PushButtonStates_t PushButtonStates;
 
+static float avgTemp;
+
 
 /***********************************************************************************************************************
  * Prototypes
@@ -118,7 +120,8 @@ static Controller_State_t LogData_State(void)
 {
     char LCDString[16];
 
-    UserMenu_DetermineLCDString(&PushButtonStates, 7, LCDString);
+    UserMenu_DetermineLCDString(&PushButtonStates, avgTemp, LCDString);
+
     I2CManager_SendToLCD(LCDString);
 
     I2CManager_LaunchExchange();
@@ -133,7 +136,7 @@ static Controller_State_t DoMath_State(void)
     //get 5 temp readings
     float temps[5] = {DataBuffer.temperature[0], DataBuffer.temperature[1], DataBuffer.temperature[2], DataBuffer.temperature[3], DataBuffer.temperature[4]}; //5 temp probe readings
     float temp_diffs[5]; //to store deltas between probe readings and avg temp
-    float avgTemp = 0; //mean temperature
+    avgTemp = 0; //mean temperature
     float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
 
     for (int i=0; i<5; i++)
