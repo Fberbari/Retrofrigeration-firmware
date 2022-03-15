@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include "Actuators.h"
+#include "TempCalc.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -94,7 +95,7 @@ void Controller_SaveTheAfricans(void)
 
 static Controller_State_t CollectData_State(void)
 {
-
+    //printf("Temperature is %f\n", Temperature_ADCtoCelsius(330));
     return CTRL_LOG_DATA;
 }
 

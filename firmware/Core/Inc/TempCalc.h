@@ -22,6 +22,7 @@
 
 #define ADC_QUANTIZATION 1024                     //Number of unique ADC values
 #define BOARD_V_FS 3.3                             //Full-scale board voltage
+#define BOARD_V_FS_1000 3300
 #define PCB_DIVIDING_RESISTANCE 12000               //On-board resistor used for voltage division
 //Coeffs for Steinhart-Hart R-T equation of a thermistor
 //#define STEINHART_HART_A 0.00146162571738         //
@@ -29,7 +30,8 @@
 //#define STEINHART_HART_C 0.0000000096852654336    //9.6852654336×10^−8
 #define KELVIN_TO_CELSIUS 273.15                  //Steinhart-Hart eqn gives T in K - use this to convert to Celsius
 #define BETA_PARAMETER 3892
-#define RESIST_PARAMETER 0.0034982085473
+#define RESIST_PARAMETER 0.00480714677511
+#define RESIST_PARAM_INVERSE 208.0236046
 /***********************************************************************************************************************
  * Prototypes
  **********************************************************************************************************************/
