@@ -58,7 +58,7 @@ static bool IOExpand1ReadDataNew;
 static uint8_t IOExpand1WriteData;
 static bool IOExpand1DataWritten;
 
-static char strToWrite[33];
+static char strToWrite[20];
 static bool strHasBeenWritten;
 
 static I2CBusStatus_t currentBusStatus;
@@ -79,6 +79,8 @@ static int ExecuteLCDExchange(void);
 static void LCDSendCommandPolling(uint8_t cmd);
 static void LCDSendCommandIT(uint8_t cmd);
 static void LCDSendDataIT(char data);
+static void LCDSendStringPolling (char *str);
+static void LCDSendDataPolling (char data);
 
 /***********************************************************************************************************************
  * Code
@@ -92,6 +94,7 @@ void I2CManager_Init(void)
     IOExpand1ReadDataNew = false;
     IOExpand1DataWritten = true;
     strHasBeenWritten = true;
+    strToWrite[0] = ' ';
 
     InitAdc();
     InitIOExpand1();
@@ -200,7 +203,7 @@ int I2CManager_SendToLCD(const char *str)
         return RETROFRIGERATION_BUSY;
     }
 
-    strcpy(strToWrite, str);
+    strcpy(&strToWrite[1], str);
 
     strHasBeenWritten = false;
 
@@ -255,15 +258,18 @@ static void InitLCD(void)
 
   // dislay initialisation
     LCDSendCommandPolling (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
-    HAL_Delay(1);
+    HAL_Delay(10);
     LCDSendCommandPolling (0x08); //Display on/off control --> D=0,C=0, B=0  ---> display off
-    HAL_Delay(1);
+    HAL_Delay(10);
     LCDSendCommandPolling (0x01);  // clear display
-    HAL_Delay(1);
-    HAL_Delay(1);
+    HAL_Delay(10);
+    HAL_Delay(10);
     LCDSendCommandPolling (0x06); //Entry mode set --> I/D = 1 (increment cursor) & S = 0 (no shift)
-    HAL_Delay(1);
+    HAL_Delay(10);
     LCDSendCommandPolling (0x0C); //Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
+    HAL_Delay(100);
+    LCDSendStringPolling("RETROFRIGERATION");
+    HAL_Delay(2000);
 }
 
 static void LaunchADCExchange(void)
@@ -306,9 +312,29 @@ static int ExecuteLCDExchange(void)
 
 }
 
+static void LCDSendStringPolling (char *str)
+{
+    while (*str) LCDSendDataPolling (*str++);
+}
+
+static void LCDSendDataPolling (char data)
+{
+    HAL_Delay(30);
+    char data_u, data_l;
+    uint8_t data_t[4];
+    data_u = (data&0xf0);
+    data_l = ((data<<4)&0xf0);
+    data_t[0] = data_u|0x0D;  //en=1, rs=0
+    data_t[1] = data_u|0x09;  //en=0, rs=0
+    data_t[2] = data_l|0x0D;  //en=1, rs=0
+    data_t[3] = data_l|0x09;  //en=0, rs=0
+    HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t), DEFAULT_TIMEOUT);
+}
+
 static void LCDSendCommandPolling(uint8_t cmd)
 {
-  uint8_t data_u, data_l;
+    HAL_Delay(10);
+    uint8_t data_u, data_l;
     uint8_t data_t[4];
     data_u = (cmd&0xf0);
     data_l = ((cmd<<4)&0xf0);
