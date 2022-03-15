@@ -20,16 +20,25 @@
 #define IOEXPAND1_SLAVE_ADDRESS_W (IOEXPAND1_SLAVE_ADDRESS << 1)
 #define IOEXPAND1_SLAVE_ADDRESS_R (IOEXPAND1_SLAVE_ADDRESS << 1) | 0x01
 
+// this connects directly to the LCD
+#define IOEXPAND2_SLAVE_ADDRESS 0x3F
+#define IOEXPAND2_SLAVE_ADDRESS_W (IOEXPAND2_SLAVE_ADDRESS << 1)
+
+#define LCD_CLEAR_CMD 0x01
+
+#define LCD_EXCHANGE_IN_PROGRESS 0
+#define LCD_EXCHANGE_COMPLETE 1
+
 // Only used for the initialization polling I2C functions
 #define DEFAULT_TIMEOUT 1000 // ms
 
 typedef enum I2CbusStatus
 {
     READY,
+    BUSY_ADC,
     BUSY_IOEXPAND_1_READING,
     BUSY_IOEXPAND_1_WRITING,
-    BUSY_IOEXPAND_2,
-    BUSY_ADC,
+    BUSY_LCD,
     FAILED
 }I2CBusStatus_t;
 
@@ -49,6 +58,9 @@ static bool IOExpand1ReadDataNew;
 static uint8_t IOExpand1WriteData;
 static bool IOExpand1DataWritten;
 
+static char[33] strToWrite;
+static bool strHasBeenWritten;
+
 static I2CBusStatus_t currentBusStatus;
 
 /***********************************************************************************************************************
@@ -62,6 +74,8 @@ static void InitIOExpand1(void);
 static void LaunchIOExpand1ReadExchange(void);
 static void LaunchIOExpand1WriteExchange(void);
 
+static void InitLCD(void);
+
 /***********************************************************************************************************************
  * Code
  **********************************************************************************************************************/
@@ -73,6 +87,7 @@ void I2CManager_Init(void)
     adcDataNew = false;
     IOExpand1ReadDataNew = false;
     IOExpand1DataWritten = true;
+    strHasBeenWritten = true;
 
     InitAdc();
     InitIOExpand1();
@@ -159,9 +174,48 @@ int I2CManager_SendActuatorCommands(const ActuatorCommands_t *ActuatorCommands)
     return RETROFRIGERATION_SUCCEEDED;
 }
 
+int I2CManager_SendToLCD(const char *str)
+{
+    if(currentBusStatus == FAILED)
+    {
+        return RETROFRIGERATION_FAILED;
+    }
+    else if(currentBusStatus != READY)
+    {
+        return RETROFRIGERATION_BUSY;
+    }
+
+    if(strlen(str) > 36)
+    {
+        return RETROFRIGERATION_FAILED;
+    }
+
+    if (! strHasBeenWritten)
+    {
+        return RETROFRIGERATION_BUSY;
+    }
+
+    strcpy(strToWrite, str);
+
+    strHasBeenWritten = false;
+
+    return RETROFRIGERATION_SUCCEEDED;
+}
+
 int I2CManager_LaunchExchange(void)
 {
+    if (currentBusStatus == FAILED)
+    {
+        return RETROFRIGERATION_FAILED;
+    }
+
+    else if (currentBusStatus != READY)
+    {
+        return RETROFRIGERATION_BUSY;
+    }
+
 	currentBusStatus = BUSY_IOEXPAND_1_READING;
+
     LaunchIOExpand1ReadExchange();
 }
 
@@ -177,6 +231,32 @@ static void InitIOExpand1(void)
     uint8_t data = 0xf8;
     HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_W, &data, sizeof(data), DEFAULT_TIMEOUT);
 
+}
+
+static void InitLCD(void)
+{
+    // 4 bit initialisation
+    HAL_Delay(50);  // wait for >40ms
+    LCDSendCommandPolling (0x30);
+    HAL_Delay(5);  // wait for >4.1ms
+    LCDSendCommandPolling (0x30);
+    HAL_Delay(1);  // wait for >100us
+    LCDSendCommandPolling (0x30);
+    HAL_Delay(10);
+    LCDSendCommandPolling (0x20);  // 4bit mode
+    HAL_Delay(10);
+
+  // dislay initialisation
+    LCDSendCommandPolling (0x28); // Function set --> DL=0 (4 bit mode), N = 1 (2 line display) F = 0 (5x8 characters)
+    HAL_Delay(1);
+    LCDSendCommandPolling (0x08); //Display on/off control --> D=0,C=0, B=0  ---> display off
+    HAL_Delay(1);
+    LCDSendCommandPolling (0x01);  // clear display
+    HAL_Delay(1);
+    HAL_Delay(1);
+    LCDSendCommandPolling (0x06); //Entry mode set --> I/D = 1 (increment cursor) & S = 0 (no shift)
+    HAL_Delay(1);
+    LCDSendCommandPolling (0x0C); //Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
 }
 
 static void LaunchADCExchange(void)
@@ -200,6 +280,72 @@ static void LaunchIOExpand1WriteExchange(void)
     HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_W, &IOExpand1WriteData, sizeof(IOExpand1WriteData));
 }
 
+static int ExecuteLCDExchange(void)
+{
+    static int currentIndex = -1;
+
+    if (currentIndex == -1)
+    {
+        LCDSendCommandIT(LCD_CLEAR_CMD);
+        currentIndex ++;
+    }
+    else if (currentIndex == 32)
+    {
+        currentIndex = -1;
+        return LCD_EXCHANGE_COMPLETE;
+    }
+    else
+    {
+        LCDSendDataIT(strToWrite[currentIndex])
+        currentIndex ++;
+    }
+
+    return LCD_EXCHANGE_IN_PROGRESS;
+
+}
+
+static void LCDSendCommandPolling(uint8_t cmd)
+{
+  uint8_t data_u, data_l;
+    uint8_t data_t[4];
+    data_u = (cmd&0xf0);
+    data_l = ((cmd<<4)&0xf0);
+    data_t[0] = data_u|0x0C;  //en=1, rs=0
+    data_t[1] = data_u|0x08;  //en=0, rs=0
+    data_t[2] = data_l|0x0C;  //en=1, rs=0
+    data_t[3] = data_l|0x08;  //en=0, rs=0
+
+    HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t), DEFAULT_TIMEOUT);
+}
+
+static void LCDSendCommandIT(uint8_t cmd)
+{
+  uint8_t data_u, data_l;
+    uint8_t data_t[4];
+    data_u = (cmd&0xf0);
+    data_l = ((cmd<<4)&0xf0);
+    data_t[0] = data_u|0x0C;  //en=1, rs=0
+    data_t[1] = data_u|0x08;  //en=0, rs=0
+    data_t[2] = data_l|0x0C;  //en=1, rs=0
+    data_t[3] = data_l|0x08;  //en=0, rs=0
+
+    HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t));
+}
+
+static void LCDSendDataIT(char data)
+{
+    uint8_t data_u, data_l;
+    uint8_t data_t[4];
+    data_u = (data&0xf0);
+    data_l = ((data<<4)&0xf0);
+    data_t[0] = data_u|0x0D;  //en=1, rs=0
+    data_t[1] = data_u|0x09;  //en=0, rs=0
+    data_t[2] = data_l|0x0D;  //en=1, rs=0
+    data_t[3] = data_l|0x09;  //en=0, rs=0
+
+    HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W,data_t, sizeof(data_t));
+}
+
 /****************************Interrupt Handlers****************************/
 
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
@@ -213,19 +359,33 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
             break;
 
         case BUSY_IOEXPAND_1_WRITING:
-            LaunchADCExchange();
+            IOExpand1DataWritten = true;
             currentBusStatus = BUSY_ADC;
+            LaunchADCExchange();
             break;
 
         case BUSY_ADC:
-            // launch IOExpand2
+            ExecuteLCDExchange();
             adcDataNew = true;
-            currentBusStatus = BUSY_IOEXPAND_2;
+            currentBusStatus = BUSY_LCD;
             break;
 
-        case BUSY_IOEXPAND_2:
-            currentBusStatus = READY;
+        case BUSY_LCD:
+        {
+            int status = ExecuteLCDExchange();
+
+            if(status == LCD_EXCHANGE_IN_PROGRESS)
+            {
+                currentBusStatus = BUSY_LCD;
+            }
+            else
+            {
+                strHasBeenWritten = true;
+                currentBusStatus = READY;
+            }
             break;
+        }
+
 
         default:
             currentBusStatus = FAILED;

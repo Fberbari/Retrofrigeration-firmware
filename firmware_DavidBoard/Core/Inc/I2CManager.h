@@ -75,8 +75,19 @@ int I2CManager_GetPushButtonStates(PushButtonStates_t *PushButtonStates);
 int I2CManager_SendActuatorCommands(const ActuatorCommands_t *ActuatorCommands);
 
 
-// TOO add LCD function
-
+/**
+* Displays the requested string on the LCD.
+* The string must be at most 32 characters long, not including the null terminator.
+* The first 16 characters will be displayed on the top row of the LCD, the others will be displayed on the bottom row.
+* The string must end with the null terminator. Otherwise, undefined behavior will occur.
+* Returns succeeded if the PREVIOUS transmission succeeded, failed if the previous transmission failed,
+* and busy if the previous strings were not yet transmitted. In the case of a busy return, the parameter string will
+* be ignored and the module will continue sending the previous string.
+* This is a non blocking function that returns right away.
+* @param[in]        topStr         the string to be displayed in the top row.
+* @return           RETROFRIGERATION_SUCCEEDED, RETROFRIGERATION_BUSY or RETROFRIGERATION_FAILED
+*/
+int I2CManager_SendToLCD(const char *str);
 
 /**
 * Begins all I2C exchanges necessary to collect and transmit all the above data.
