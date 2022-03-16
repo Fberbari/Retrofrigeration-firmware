@@ -33,7 +33,7 @@ typedef struct
 
 
 
-#define CTRL_LOOP_FREQUENCY 50  // Hz
+#define CTRL_LOOP_FREQUENCY 25  // Hz
 
 
 #define RETROFRIGERATION_BUSY         2

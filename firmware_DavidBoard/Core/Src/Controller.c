@@ -27,6 +27,7 @@ extern TIM_HandleTypeDef htim3;
 
 // state input/output data
 static ActuatorCommands_t ActuatorCommands;
+static UserSettings_t UserSettings;
 
 static Controller_State_t currentState;
 static bool periodHasPassed;
@@ -110,10 +111,10 @@ void Controller_SaveTheAfricans(void)
 
 static Controller_State_t CollectData_State(void)
 {
+    UserMenu_GetUserSettings(&UserSettings);
     I2CManager_GetPushButtonStates(&PushButtonStates);
 
     Temperature_ADCtoCelsius(&DataBuffer);
-
 
     return CTRL_LOG_DATA;
 }
