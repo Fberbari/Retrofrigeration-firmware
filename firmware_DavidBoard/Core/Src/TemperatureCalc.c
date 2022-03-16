@@ -53,7 +53,7 @@ int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *Data
     {
         if((ThermADCValues->thermistor[i]) <= 0 || (ThermADCValues->thermistor[i]) >= ADC_QUANTIZATION-1)
         {
-            return RETROFRIGERATION_FAILED; //should there be an ERROR code?
+            return RETROFRIGERATION_FAILED;
         }
         /*//Outdated - uses too much memory
         V1 = (ADC_VALUE*BOARD_V_FS)/(ADC_QUANTIZATION-1);
@@ -64,8 +64,9 @@ int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *Data
         */
         V1000int = ((ThermADCValues->thermistor[i])*BOARD_V_FS_1000)/(ADC_QUANTIZATION-1);
         R1000int = V1000int * PCB_DIVIDING_RESISTANCE / (BOARD_V_FS_1000 - V1000int);
-        TCelsius = BETA_PARAMETER/log(R1000int*RESIST_PARAM_INVERSE)-KELVIN_TO_CELSIUS; //B parameter equation - slightly less accurate than Steinhart-Hart, but less resources used
-        DataBuffer->temperature[i] = TCelsius;
+        //TCelsius = BETA_PARAMETER/log(R1000int*RESIST_PARAM_INVERSE)-KELVIN_TO_CELSIUS; //B parameter equation - slightly less accurate than Steinhart-Hart, but less resources used
+
+        DataBuffer->temperature[i] = R1000int;//TCelsius;
 
         /* //used for min/max/avg - not needed if these calcs are done downstream
         temperatureSum += TCelsius;

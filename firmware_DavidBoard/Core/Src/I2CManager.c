@@ -114,9 +114,9 @@ int I2CManager_GetRawThermistorADC(ThermistorADC_t *ThermistorADC)
     }
 
 
-    ThermistorADC->thermistor[0] = rawAdcData[8] + ((rawAdcData[9] & 0x3) << 8);
-    ThermistorADC->thermistor[1] = rawAdcData[10] + ((rawAdcData[11] & 0x3) << 8);
-    ThermistorADC->thermistor[2] = rawAdcData[12] + ((rawAdcData[13] & 0x3) << 8);
+    ThermistorADC->thermistor[0] = rawAdcData[14] + ((rawAdcData[15] & 0x3) << 8);  //[8][9]
+    ThermistorADC->thermistor[1] = rawAdcData[14] + ((rawAdcData[15] & 0x3) << 8);//[10][11]
+    ThermistorADC->thermistor[2] = rawAdcData[14] + ((rawAdcData[15] & 0x3) << 8);//[12][13]
     ThermistorADC->thermistor[3] = rawAdcData[14] + ((rawAdcData[15] & 0x3) << 8);
 
     adcDataNew = false;
