@@ -224,6 +224,8 @@ int I2CManager_LaunchExchange(void)
 
 	currentBusStatus = BUSY_IOEXPAND_1_READING;
 
+    LCDSendCommandPolling(LCD_CLEAR_CMD);
+
 	LaunchIOExpand1ReadExchange();
 
     return RETROFRIGERATION_SUCCEEDED;
@@ -290,16 +292,11 @@ static void LaunchIOExpand1WriteExchange(void)
 
 static int ExecuteLCDExchange(void)
 {
-    static int currentIndex = -1;
+    static int currentIndex = 0;
 
-    if (currentIndex < 0)
+    if (strToWrite[currentIndex] == '\0')
     {
-        currentIndex ++;
-        LCDSendCommandIT(LCD_CLEAR_CMD);
-    }
-    else if (strToWrite[currentIndex] == '\0')
-    {
-        currentIndex = -1;
+        currentIndex = 0;
         return LCD_EXCHANGE_COMPLETE;
     }
     else
@@ -309,7 +306,6 @@ static int ExecuteLCDExchange(void)
     }
 
     return LCD_EXCHANGE_IN_PROGRESS;
-
 }
 
 static void LCDSendStringPolling (char *str)
@@ -333,7 +329,6 @@ static void LCDSendDataPolling (char data)
 
 static void LCDSendCommandPolling(uint8_t cmd)
 {
-    HAL_Delay(10);
     uint8_t data_u, data_l;
     uint8_t data_t[4];
     data_u = (cmd&0xf0);
