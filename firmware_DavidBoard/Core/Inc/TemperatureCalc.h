@@ -5,16 +5,17 @@
  * Author(s): Jacob Smith
  */
 
-#include "Common.h"
+#include "Common.h" //move these to TemperatureCalc.c
 #include "I2CManager.h"
 
 /***********************************************************************************************************************
  * Definitions
  **********************************************************************************************************************/
 
-#define ADC_QUANTIZATION 1024                     //Number of unique ADC values
-#define BOARD_V_FS 3.3                             //Full-scale board voltage
-#define BOARD_V_FS_1000 3300
+#define ADC_QUANTIZATION 1024                     	//Number of unique ADC values
+#define ADC_V_FS 2048								//ADC full-scale voltage (mV)
+#define BOARD_V_FS 3.3                            	//Full-scale board voltage
+#define BOARD_V_FS_1000 3300						//Full-scale board voltage in mV
 #define PCB_DIVIDING_RESISTANCE 12000               //On-board resistor used for voltage division
 //Coeffs for Steinhart-Hart R-T equation of a thermistor
 //#define STEINHART_HART_A 0.00146162571738         //
