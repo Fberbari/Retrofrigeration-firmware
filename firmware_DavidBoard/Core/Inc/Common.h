@@ -33,12 +33,15 @@ typedef struct
 
 
 
-#define CTRL_LOOP_FREQUENCY 50  // Hz
+#define CTRL_LOOP_FREQUENCY 25  // Hz
 
+#define NUM_TEMP_PROBES 4
 
 #define RETROFRIGERATION_BUSY         2
 #define RETROFRIGERATION_SUCCEEDED    1
 #define RETROFRIGERATION_FAILED       0
+
+#define ABS(N) ((N<0)?(-N):(N))
 
 /***********************************************************************************************************************
  * State data structures definitions
