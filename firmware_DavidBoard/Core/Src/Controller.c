@@ -7,6 +7,9 @@
  * Definitions
  **********************************************************************************************************************/
 
+#define MAX_ALLOWABLE_TEMP_DIFF 1.0f // start fan if the temperature at any probe is this far from the average
+#define REASONABLE_TEMP_DIFF 0.5f    // Do not stop fan until no probe is this far from the average temperature
+
 typedef enum state
 {
     CTRL_COLLECT_DATA,
@@ -134,46 +137,56 @@ static Controller_State_t LogData_State(void)
 
 static Controller_State_t DoMath_State(void)
 {
-    static int loopCounter;
-    static int comp_off_counter;
-    //get 5 temp readings
-    float temps[5] = {DataBuffer.temperature[0], DataBuffer.temperature[1], DataBuffer.temperature[2], DataBuffer.temperature[3], DataBuffer.temperature[4]}; //5 temp probe readings
-    float temp_diffs[5]; //to store deltas between probe readings and avg temp
-    avgTemp = 0; //mean temperature
-    float fan_treshold = 1; //desired fan treshold (set to 1C for now, can be changed)
+    static uint32_t numLoopsSinceCompressorOff;
+    numLoopsSinceCompressorOff ++;
 
-    for (int i=0; i<5; i++)
-        avgTemp += 0.2*temps[i]; //calculate mean temp
-
-    //fan control
-    if(loopCounter % 100 ==0) //every 2 seconds
-        for (int i=0; i<5; i++)
-        {
-            temp_diffs[i] = temps[i] - avgTemp; //calculate deviation from mean temp.
-            if (temp_diffs[i] >= fan_treshold || temp_diffs[i] <= -1*fan_treshold)
-            {
-                ActuatorCommands.fan = FAN_ON; //if any probe exceeds treshold, turn on internal fan
-                break;
-            }
-            else ActuatorCommands.fan = FAN_OFF;
-        }
-
-    //compressor control
-    if (avgTemp > 3 && comp_off_counter >= 50*75) //on at 3C if off for at least 75s
+    avgTemp = 0;
+    for (int i = 0; i < NUM_TEMP_PROBES; i++)
     {
-        loopCounter =0; //reset loop counter every so often to avoid overflow
-        ActuatorCommands.compressor = COMPRESSOR_ON;
+        avgTemp += DataBuffer.temperature[i]/NUM_TEMP_PROBES;
+    }
+
+   /****************************Fan Control****************************/
+
+    bool allProbesReasonableDiff = true;
+
+    for (int i = 0; i < NUM_TEMP_PROBES; i++)
+    {
+        int tempDiff = DataBuffer.temperature[i] - avgTemp;
+
+        if (ABS(tempDiff) > MAX_ALLOWABLE_TEMP_DIFF)
+        {
+            allProbesReasonableDiff = false;
+            ActuatorCommands.fan = FAN_ON; // turn ON if any exceed the max allowable threshold
+            break;
+        }
+        else if (ABS(tempDiff) > REASONABLE_TEMP_DIFF)
+        {
+            allProbesReasonableDiff = false;
+        }
+    }
+
+    if (allProbesReasonableDiff)   // only turn off fan once all probes are within the reasonable threshold
+    {
+        ActuatorCommands.fan = FAN_OFF;
+    }
+
+    /****************************Compressor Control****************************/
+
+    if (avgTemp > UserSettings.setTemp)
+    {
+        // Compressor must be off for at least 75s before being turned on again
+        if(numLoopsSinceCompressorOff >= 75*CTRL_LOOP_FREQUENCY)
+        {
+            ActuatorCommands.compressor = COMPRESSOR_ON;
+        }
     }
   
-    else if (avgTemp < 1) //off at 1C
+    else if (avgTemp < UserSettings.setTemp)
     {
         ActuatorCommands.compressor = COMPRESSOR_OFF;
-        comp_off_counter =0; //reset compressor off counter since compressor is switched off
+        numLoopsSinceCompressorOff = 0;
     }
-
-    //increment both counters
-    loopCounter++;
-    comp_off_counter++;
   
     return CTRL_ACTUATE_FRIDGE;
 }
