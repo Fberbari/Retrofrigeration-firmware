@@ -6,7 +6,7 @@
  */
 
 #include "Common.h"
-//#include "Actuators.h"
+#include "Actuators.h"
 #include "I2CManager.h"
 #include "UserMenu.h"
 #include "TemperatureCalc.h"

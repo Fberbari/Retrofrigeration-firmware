@@ -41,7 +41,11 @@ int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *Data
  * Code
  **********************************************************************************************************************/
 
+<<<<<<< HEAD
 int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer) //change arguments - don't pass ThermADCValues
+=======
+int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer)
+>>>>>>> e7bf7227ccea139905cf390d9675ba7e16bbdd18
 {
     /* //used for min/max/avg - not needed if these calcs are done downstream
     double temperatureMin = 0;
