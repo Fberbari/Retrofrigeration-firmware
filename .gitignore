@@ -1,2 +1,4 @@
 **/Debug
 **/.settings
+.project
+firmware_DavidBoard/.cproject
