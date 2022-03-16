@@ -5,8 +5,7 @@
  * Author(s): Jacob Smith
  */
 
-#include "Common.h" //move these to TemperatureCalc.c
-#include "I2CManager.h"
+#include "Common.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -37,5 +36,5 @@
 * @return           Temperature reading in Celsius
 */
 
-int Temperature_ADCtoCelsius(ThermistorADC_t *ThermADCValues, DataBuffer_t *DataBuffer);
+int Temperature_ADCtoCelsius(DataBuffer_t *DataBuffer);
 

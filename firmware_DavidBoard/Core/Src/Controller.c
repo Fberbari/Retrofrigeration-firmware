@@ -32,6 +32,7 @@ static bool periodHasPassed;
 static DataBuffer_t DataBuffer;
 static PushButtonStates_t PushButtonStates;
 
+
 static float avgTemp;
 
 
@@ -109,6 +110,9 @@ void Controller_SaveTheAfricans(void)
 static Controller_State_t CollectData_State(void)
 {
     I2CManager_GetPushButtonStates(&PushButtonStates);
+
+    Temperature_ADCtoCelsius(&DataBuffer);
+
 
     return CTRL_LOG_DATA;
 }
