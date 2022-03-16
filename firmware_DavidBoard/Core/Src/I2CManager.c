@@ -50,18 +50,18 @@ typedef enum I2CbusStatus
 extern I2C_HandleTypeDef hi2c2;
 
 static uint8_t rawAdcData[16];
-static bool adcDataNew;
+static volatile bool adcDataNew;
 
 static uint8_t rawIOExpand1ReadData;
-static bool IOExpand1ReadDataNew;
+static volatile bool IOExpand1ReadDataNew;
 
 static uint8_t IOExpand1WriteData;
-static bool IOExpand1DataWritten;
+static volatile bool IOExpand1DataWritten;
 
 static char strToWrite[20];
-static bool strHasBeenWritten;
+static volatile bool strHasBeenWritten;
 
-static I2CBusStatus_t currentBusStatus;
+static volatile I2CBusStatus_t currentBusStatus;
 
 /***********************************************************************************************************************
  * Prototypes
@@ -114,10 +114,10 @@ int I2CManager_GetRawThermistorADC(ThermistorADC_t *ThermistorADC)
     }
 
 
-    ThermistorADC->thermistor[0] = rawAdcData[8] + ((rawAdcData[9] & 0x3) << 8);
-    ThermistorADC->thermistor[1] = rawAdcData[10] + ((rawAdcData[11] & 0x3) << 8);
-    ThermistorADC->thermistor[2] = rawAdcData[12] + ((rawAdcData[13] & 0x3) << 8);
-    ThermistorADC->thermistor[3] = rawAdcData[14] + ((rawAdcData[15] & 0x3) << 8);
+    ThermistorADC->thermistor[0] = rawAdcData[9] + ((rawAdcData[8] & 0x3) << 8);
+    ThermistorADC->thermistor[1] = rawAdcData[11] + ((rawAdcData[10] & 0x3) << 8);
+    ThermistorADC->thermistor[2] = rawAdcData[13] + ((rawAdcData[12] & 0x3) << 8);
+    ThermistorADC->thermistor[3] = rawAdcData[15] + ((rawAdcData[14] & 0x3) << 8);
 
     adcDataNew = false;
 
