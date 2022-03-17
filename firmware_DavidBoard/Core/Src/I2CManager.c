@@ -77,10 +77,7 @@ static void LaunchIOExpand1WriteExchange(void);
 static void InitLCD(void);
 static int ExecuteLCDExchange(void);
 static void LCDSendCommandPolling(uint8_t cmd);
-static void LCDSendCommandIT(uint8_t cmd);
 static void LCDSendDataIT(char data);
-static void LCDSendStringPolling (char *str);
-static void LCDSendDataPolling (char data);
 
 /***********************************************************************************************************************
  * Code
@@ -269,8 +266,6 @@ static void InitLCD(void)
     LCDSendCommandPolling (0x06); //Entry mode set --> I/D = 1 (increment cursor) & S = 0 (no shift)
     HAL_Delay(10);
     LCDSendCommandPolling (0x0C); //Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
-    HAL_Delay(100);
-    LCDSendStringPolling("RETROFRIGERATION");
     HAL_Delay(2000);
 }
 
@@ -308,25 +303,6 @@ static int ExecuteLCDExchange(void)
     return LCD_EXCHANGE_IN_PROGRESS;
 }
 
-static void LCDSendStringPolling (char *str)
-{
-    while (*str) LCDSendDataPolling (*str++);
-}
-
-static void LCDSendDataPolling (char data)
-{
-    HAL_Delay(30);
-    char data_u, data_l;
-    uint8_t data_t[4];
-    data_u = (data&0xf0);
-    data_l = ((data<<4)&0xf0);
-    data_t[0] = data_u|0x0D;  //en=1, rs=0
-    data_t[1] = data_u|0x09;  //en=0, rs=0
-    data_t[2] = data_l|0x0D;  //en=1, rs=0
-    data_t[3] = data_l|0x09;  //en=0, rs=0
-    HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t), DEFAULT_TIMEOUT);
-}
-
 static void LCDSendCommandPolling(uint8_t cmd)
 {
     uint8_t data_u, data_l;
@@ -339,20 +315,6 @@ static void LCDSendCommandPolling(uint8_t cmd)
     data_t[3] = data_l|0x08;  //en=0, rs=0
 
     HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t), DEFAULT_TIMEOUT);
-}
-
-static void LCDSendCommandIT(uint8_t cmd)
-{
-  uint8_t data_u, data_l;
-    uint8_t data_t[4];
-    data_u = (cmd&0xf0);
-    data_l = ((cmd<<4)&0xf0);
-    data_t[0] = data_u|0x0C;  //en=1, rs=0
-    data_t[1] = data_u|0x08;  //en=0, rs=0
-    data_t[2] = data_l|0x0C;  //en=1, rs=0
-    data_t[3] = data_l|0x08;  //en=0, rs=0
-
-    HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t));
 }
 
 static void LCDSendDataIT(char data)
