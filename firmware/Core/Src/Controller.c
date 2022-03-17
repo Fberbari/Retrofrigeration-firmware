@@ -25,8 +25,21 @@ typedef enum state
 extern TIM_HandleTypeDef htim2;
 
 // global structures
-static DataBuffer_t DataBuffer;
-static SystemOutputState_t SystemOutputState;
+static DataBuffer_t DataBuffer = {
+	.mainsFailed = false,          // read via the TPS2113 status
+	.batteryDoneCharging = false,
+	.batteryVoltage = 3.95,
+	.temperature = {3.5,3.6,3.5,3.4},
+	.buttonIsClicked = {false, false, false, false}
+};
+static SystemOutputState_t SystemOutputState = {
+	    .batteryIsCharging = true,
+	    .compressorIsOn = true,
+	    .fanIsOn = false
+};
+
+int temp = 0;
+bool usb_logs_requested = false;
 
 // state input/output data
 static ActuatorCommands_t ActuatorCommands;
@@ -106,8 +119,21 @@ static Controller_State_t CollectData_State(void)
 
 static Controller_State_t LogData_State(void)
 {
-	int r = Flash_LogData(&DataBuffer);
+	if (temp_send_to_terminal_delay < temp)
+	{
+		usb_logs_requested = true;
+		temp = 0;
+	}
+	temp ++;
 
+	int r = Flash_LogData(&DataBuffer, &SystemOutputState);
+
+	if (r != RETROFRIGERATION_SUCCEEDED)
+	{
+		return CTRL_FAILED;
+	}
+
+	r = Flash_PassDataToUSB(&usb_logs_requested);
 	if (r != RETROFRIGERATION_SUCCEEDED)
 	{
 		return CTRL_FAILED;

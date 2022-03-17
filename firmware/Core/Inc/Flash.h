@@ -11,11 +11,21 @@
  * Definitions
  **********************************************************************************************************************/
 
-#define sFLASH_TIMEOUT			  0x01
-#define sFLASH_WIP_FLAG           0x01  /* Write In Progress (WIP) flag */
-#define sFLASH_DUMMY_BYTE         0xA5
-#define sFLASH_SPI_PAGESIZE       0x100
+/* module */
+//#define sFLASH_LOGGING_PERIOD					45000		// every 15m
+#define sFLASH_LOGGING_PERIOD					50		// 1 seconds
+#define temp_send_to_terminal_delay				300		// 6 seconds
+#define inter_UART_TX_delay						20
 
+#define sFLASH_ROLLING_AVERAGE_SAMPLE_PERIOD	1500		// every 30s
+#define sFLASH_ROLLING_AVERAGE_SAMPLE_COUNT		15
+
+
+#define sFLASH_TIMEOUT			  	0x01
+#define sFLASH_WIP_FLAG           	0x01  /* Write In Progress (WIP) flag */
+#define sFLASH_DUMMY_BYTE         	0xA5
+#define sFLASH_SPI_PAGESIZE       	0x100
+#define SFLASH_TOTAL_ADDRESS_SIZE	0x01FFFF
 
 /* GD25D05C SPI Flash supported commands */
 #define sFLASH_CMD_WREN           0x06  /* Write enable instruction */
@@ -54,6 +64,33 @@
  */
 
 
+/***********************************************************************************************************************
+ * Structures and Variables
+ **********************************************************************************************************************/
+
+typedef struct
+{
+	uint32_t time_stamp;		// 4 bytes; seconds since epoch (1970)
+	float min_temperature;		// 4 bytes
+	float max_temperature;		// 4 bytes
+	float average_temperature;	// 4 bytes
+	float batteryVoltage;		// 4 bytes
+	bool mainsFailed;			// 1 byte
+    bool batteryIsCharging;		// 1 byte
+    bool compressorIsOn;		// 1 byte
+    bool fanIsOn;				// 1 byte
+    char padding[8];				// 8 bytes; ensure that struct is 32 bytes
+}storage_buffer_t;
+
+
+//circle buffer for storing temperature rolling average
+typedef struct
+{
+	float buffer[sFLASH_ROLLING_AVERAGE_SAMPLE_COUNT];
+	uint8_t index;
+}rolling_average_buffer_t;
+
+
 
 /***********************************************************************************************************************
  * Prototypes
@@ -74,6 +111,6 @@ void Flash_Init(void);
 * @param[in]        DataBuffer          struct with data to be logged
 * @return           RETROFRIGERATION_SUCCEEDED, RETROFRIGERATION_BUSY or RETROFRIGERATION_FAILED
 */
-int Flash_LogData(const DataBuffer_t *DataBuffer);
-int Flash_PassDataToUSB(void);
+int Flash_LogData(const DataBuffer_t *DataBuffer, const SystemOutputState_t *SystemOutputState);
+int Flash_PassDataToUSB(bool* usb_logs_requested);
 
