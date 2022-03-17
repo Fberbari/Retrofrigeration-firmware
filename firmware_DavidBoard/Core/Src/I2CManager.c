@@ -75,7 +75,7 @@ static void LaunchIOExpand1ReadExchange(void);
 static void LaunchIOExpand1WriteExchange(void);
 
 static void InitLCD(void);
-static int ExecuteLCDExchange(void);
+static void ExecuteLCDExchange(void);
 static void LCDSendCommandPolling(uint8_t cmd);
 static void LCDSendDataPolling(char data);
 
@@ -285,7 +285,7 @@ static void LaunchIOExpand1WriteExchange(void)
     HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_W, &IOExpand1WriteData, sizeof(IOExpand1WriteData));
 }
 
-static int ExecuteLCDExchange(void)
+static void ExecuteLCDExchange(void)
 {
     LCDSendCommandPolling(LCD_CLEAR_CMD);
     HAL_Delay(1);
@@ -298,7 +298,7 @@ static int ExecuteLCDExchange(void)
         i++;
     }
 
-    return LCD_EXCHANGE_COMPLETE;
+    strHasBeenWritten = true;
 }
 
 static void LCDSendCommandPolling(uint8_t cmd)
