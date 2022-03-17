@@ -21,11 +21,11 @@ void UserMenu_Init(void);
 /**
 * Based on current input, previous input, and current data, outputs the string that needs to pushed to the LCD.
 * This is a non blocking function that returns right away.
-* @param[in]        PushButtonStates          state of the push buttons at time of call.
-* @param[in]        currentTemp               current fridgeTemperature.
-* @param[out]       outputString              string to be shown on LCD screen
+* @param[in]        DataBuffer                All systems data.
+* @param[out]       outputStringTop           string to be shown on the top row of the LCD
+* @param[out]       outputStringBottom        string to be shown on the bottom row of the LCD
 */
-void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int currentTemp, char *outputString);
+void UserMenu_DetermineLCDString(const DataBuffer_t *DataBuffer, char *outputStringTop, char *outputStringBottom);
 
 /**
 * Returns the user requested temperature and temperature bounds.

@@ -23,6 +23,7 @@ typedef struct
     bool batteryDoneCharging;	// 1 byte; read via PCF8574 IO expander
     float batteryVoltage;		// 4 bytes; read via MAX11609 ADC
     float temperature[4];		// 16 bytes; read via MAX11609 ADC
+    float averageTemperature;   // 4 bytes;
     bool buttonIsClicked[4];	// 4 bytes; read via PCF8574 IO expander
 
     //system outputs
@@ -36,6 +37,7 @@ typedef struct
 #define CTRL_LOOP_FREQUENCY 25  // Hz
 
 #define NUM_TEMP_PROBES 4
+#define NUM_USER_BUTTONS 4
 
 #define RETROFRIGERATION_BUSY         2
 #define RETROFRIGERATION_SUCCEEDED    1
