@@ -78,6 +78,9 @@ void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int
         CurrentMenuState = MENU_TEMP_ERROR;
     }
 
+    // Make sure Buzzer is off upon state entrance
+    HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+
     Menu_State_t nextState;
     switch(CurrentMenuState)
     {
@@ -275,6 +278,25 @@ static Menu_State_t MenuSetUpBound_State(char *outputString)
 
 static Menu_State_t MenuTempError_State(char *outputString)
 {
+
+    static int counter;
+
+    if(counter < CTRL_LOOP_FREQUENCY/4)
+    {
+        HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+    }
+    else
+    {
+        HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
+    }
+
+    if (counter == CTRL_LOOP_FREQUENCY)
+    {
+        counter = 0;
+    }
+
+    counter ++;
+
     if (fridgeCurrentTemp > UserSettings.tempBoundHigh)
     {
         snprintf(outputString, 16, "Temp too high!");
