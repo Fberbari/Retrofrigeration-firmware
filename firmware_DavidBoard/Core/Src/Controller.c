@@ -2,7 +2,7 @@
 #include "I2CManager.h"
 #include "UserMenu.h"
 #include "TemperatureCalc.h"
-
+#include <string.h>
 /***********************************************************************************************************************
  * Definitions
  **********************************************************************************************************************/
@@ -24,6 +24,8 @@ typedef enum state
 
 // HAL handles. These should all be extern, as they are defined and initialized by cubeMX (the code generation tool) in main.c
 extern TIM_HandleTypeDef htim3;
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 
 // state input/output data
 static ActuatorCommands_t ActuatorCommands;
@@ -65,6 +67,7 @@ void Controller_Init(void)
 
     UserMenu_Init();
 
+    Logs_Init(&huart2);
     // let things settle
     HAL_Delay(1000);
 
@@ -127,6 +130,17 @@ static Controller_State_t LogData_State(void)
     I2CManager_SendToLCD(LCDString);
 
     I2CManager_LaunchExchange();
+
+//    Logs_LogWifi
+//	Wifi_Data("B", &huart2);
+    Logs_LogWifi(&DataBuffer, &huart2);
+
+//    char * s = "a";
+//
+//    HAL_UART_Transmit_IT (&huart2, (uint8_t *) s, sizeof(s));
+////    HAL_Delay();
+//
+//    HAL_UART_Receive_IT (&huart2, (uint8_t *) s, sizeof(s));
 
     return CTRL_DO_MATH;
 }
