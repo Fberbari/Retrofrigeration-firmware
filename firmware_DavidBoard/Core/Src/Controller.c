@@ -37,10 +37,6 @@ static bool periodHasPassed;
 static DataBuffer_t DataBuffer;
 static PushButtonStates_t PushButtonStates;
 
-
-static float avgTemp;
-
-
 /***********************************************************************************************************************
  * Prototypes
  **********************************************************************************************************************/
@@ -116,19 +112,25 @@ static Controller_State_t CollectData_State(void)
 {
     UserMenu_GetUserSettings(&UserSettings);
     I2CManager_GetPushButtonStates(&PushButtonStates);
-
     Temperature_ADCtoCelsius(&DataBuffer);
+
+    for (int i = 0; i < NUM_USER_BUTTONS; i++)
+    {
+        // logical not because "closed" is represented as a 0 in DataBuffer and a 1 in PushbuttonStates
+        DataBuffer.buttonIsClicked[i] = ! PushButtonStates.button[i];
+    }
 
     return CTRL_LOG_DATA;
 }
 
 static Controller_State_t LogData_State(void)
 {
-    char LCDString[16];
+    char LCDStringTop[17];
+    char LCDStringBottom[17] = "Heloo";
 
-    UserMenu_DetermineLCDString(&PushButtonStates, avgTemp, LCDString);
+    UserMenu_DetermineLCDString(&DataBuffer, LCDStringTop, LCDStringBottom);
 
-    I2CManager_SendToLCD(LCDString);
+    I2CManager_SendToLCD(LCDStringTop, LCDStringBottom);
 
     I2CManager_LaunchExchange();
 
@@ -140,11 +142,12 @@ static Controller_State_t DoMath_State(void)
     static uint32_t numLoopsSinceCompressorOff;
     numLoopsSinceCompressorOff ++;
 
-    avgTemp = 0;
+    DataBuffer.averageTemperature = 0;
     for (int i = 0; i < NUM_TEMP_PROBES; i++)
     {
-        avgTemp += DataBuffer.temperature[i]/NUM_TEMP_PROBES;
+        DataBuffer.averageTemperature += DataBuffer.temperature[i];
     }
+    DataBuffer.averageTemperature /= NUM_TEMP_PROBES;
 
    /****************************Fan Control****************************/
 
@@ -152,7 +155,7 @@ static Controller_State_t DoMath_State(void)
 
     for (int i = 0; i < NUM_TEMP_PROBES; i++)
     {
-        int tempDiff = DataBuffer.temperature[i] - avgTemp;
+        int tempDiff = DataBuffer.temperature[i] - DataBuffer.averageTemperature;
 
         if (ABS(tempDiff) > MAX_ALLOWABLE_TEMP_DIFF)
         {
@@ -173,7 +176,7 @@ static Controller_State_t DoMath_State(void)
 
     /****************************Compressor Control****************************/
 
-    if (avgTemp > UserSettings.setTemp)
+    if (DataBuffer.averageTemperature > UserSettings.setTemp)
     {
         // Compressor must be off for at least 75s before being turned on again
         if(numLoopsSinceCompressorOff >= 75*CTRL_LOOP_FREQUENCY)
@@ -182,11 +185,14 @@ static Controller_State_t DoMath_State(void)
         }
     }
   
-    else if (avgTemp < UserSettings.setTemp)
+    else if (DataBuffer.averageTemperature < UserSettings.setTemp)
     {
         ActuatorCommands.compressor = COMPRESSOR_OFF;
         numLoopsSinceCompressorOff = 0;
     }
+
+    DataBuffer.fanIsOn = ActuatorCommands.fan;
+    DataBuffer.compressorIsOn = ActuatorCommands.compressor;
   
     return CTRL_ACTUATE_FRIDGE;
 }

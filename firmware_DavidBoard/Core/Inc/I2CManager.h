@@ -66,18 +66,18 @@ int I2CManager_SendActuatorCommands(const ActuatorCommands_t *ActuatorCommands);
 
 
 /**
-* Displays the requested string on the LCD.
-* The string must be at most 15 characters long, not including the null terminator.
-* Characters will only be displayed on the top row.
-* The string must end with the null terminator. Otherwise, undefined behavior will occur.
+* Displays the requested strings on the LCD.
+* Each string must be at most 15 characters long, not including the null terminator.
+* The strings must end with the null terminator. Otherwise, undefined behavior will occur.
 * Returns succeeded if the PREVIOUS transmission succeeded, failed if the previous transmission failed,
 * and busy if the previous strings were not yet transmitted. In the case of a busy return, the parameter string will
 * be ignored and the module will continue sending the previous string.
 * This is a non blocking function that returns right away.
 * @param[in]        topStr         the string to be displayed in the top row.
+* @param[in]        bottomStr      the string to be displayed in the top row.
 * @return           RETROFRIGERATION_SUCCEEDED, RETROFRIGERATION_BUSY or RETROFRIGERATION_FAILED
 */
-int I2CManager_SendToLCD(const char *str);
+int I2CManager_SendToLCD(const char *topStr, const char *bottomStr);
 
 /**
 * Begins all I2C exchanges necessary to collect and transmit all the above data.

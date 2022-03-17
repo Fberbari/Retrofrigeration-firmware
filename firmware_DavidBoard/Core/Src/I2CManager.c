@@ -25,6 +25,7 @@
 #define IOEXPAND2_SLAVE_ADDRESS_W (IOEXPAND2_SLAVE_ADDRESS << 1)
 
 #define LCD_CLEAR_CMD 0x01
+#define LCD_CURSOR_BOTTOM_ROW_CMD 0xC0
 
 #define LCD_EXCHANGE_IN_PROGRESS 0
 #define LCD_EXCHANGE_COMPLETE 1
@@ -58,8 +59,9 @@ static volatile bool IOExpand1ReadDataNew;
 static uint8_t IOExpand1WriteData;
 static volatile bool IOExpand1DataWritten;
 
-static char strToWrite[20];
-static volatile bool strHasBeenWritten;
+static char strToWriteTop[17];
+static char strToWriteBottom[17];
+static volatile bool LCDHasBeenWritten;
 
 static volatile I2CBusStatus_t currentBusStatus;
 
@@ -90,8 +92,7 @@ void I2CManager_Init(void)
     adcDataNew = false;
     IOExpand1ReadDataNew = false;
     IOExpand1DataWritten = true;
-    strHasBeenWritten = true;
-    strToWrite[0] = ' ';
+    LCDHasBeenWritten = true;
 
     InitAdc();
     InitIOExpand1();
@@ -179,7 +180,7 @@ int I2CManager_SendActuatorCommands(const ActuatorCommands_t *ActuatorCommands)
     return RETROFRIGERATION_SUCCEEDED;
 }
 
-int I2CManager_SendToLCD(const char *str)
+int I2CManager_SendToLCD(const char *topStr, const char *bottomStr)
 {
     if(currentBusStatus == FAILED)
     {
@@ -190,19 +191,20 @@ int I2CManager_SendToLCD(const char *str)
         return RETROFRIGERATION_BUSY;
     }
 
-    if(strlen(str) > 36)
+    if ( (strlen(topStr) > 36) || (strlen(bottomStr) > 36) )
     {
         return RETROFRIGERATION_FAILED;
     }
 
-    if (! strHasBeenWritten)
+    if (! LCDHasBeenWritten)
     {
         return RETROFRIGERATION_BUSY;
     }
 
-    strcpy(&strToWrite[1], str);
+    strcpy(strToWriteTop, topStr);
+    strcpy(strToWriteBottom, bottomStr);
 
-    strHasBeenWritten = false;
+    LCDHasBeenWritten = false;
 
     return RETROFRIGERATION_SUCCEEDED;
 }
@@ -292,13 +294,23 @@ static void ExecuteLCDExchange(void)
 
     uint8_t i = 0;
 
-    while(strToWrite[i] != '\0')
+    while(strToWriteTop[i] != '\0')
     {
-        LCDSendDataPolling(strToWrite[i]);
+        LCDSendDataPolling(strToWriteTop[i]);
         i++;
     }
 
-    strHasBeenWritten = true;
+    LCDSendCommandPolling(LCD_CURSOR_BOTTOM_ROW_CMD);
+
+    i = 0;
+
+    while(strToWriteBottom[i] != '\0')
+    {
+        LCDSendDataPolling(strToWriteBottom[i]);
+        i++;
+    }
+
+    LCDHasBeenWritten = true;
 }
 
 static void LCDSendCommandPolling(uint8_t cmd)

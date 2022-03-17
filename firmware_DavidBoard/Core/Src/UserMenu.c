@@ -31,20 +31,22 @@ typedef struct
 static Menu_State_t CurrentMenuState;
 static ButtonNewlyPressed_t ButtonNewlyPressed;
 static UserSettings_t UserSettings;
+static float fridgeCurrentTemp;
+
 
 /***********************************************************************************************************************
  * Prototypes
  **********************************************************************************************************************/
 
-static void ButtonPressedSinceLastCall(const PushButtonStates_t *PushButtonStates);
+static void DetermineBottomLCDString(const DataBuffer_t *DataBuffer, char *outputStringBottom);
 
-static Menu_State_t MenuMain_State(char *outputString);
-static Menu_State_t MenuSetTemp_State(char *outputString);
-static Menu_State_t MenuSetLowBound_State(char *outputString);
-static Menu_State_t MenuSetUpBound_State(char *outputString);
-static Menu_State_t MenuTempError_State(char *outputString);
+static void ButtonPressedSinceLastCall(const DataBuffer_t *DataBuffer);
 
-static int fridgeCurrentTemp;
+static Menu_State_t MenuMain_State(char *outputStringTop);
+static Menu_State_t MenuSetTemp_State(char *outputStringTop);
+static Menu_State_t MenuSetLowBound_State(char *outputStringTop);
+static Menu_State_t MenuSetUpBound_State(char *outputStringTop);
+static Menu_State_t MenuTempError_State(char *outputStringTop);
 
 /***********************************************************************************************************************
  * Code
@@ -67,11 +69,14 @@ void UserMenu_Init(void)
 }
 
 
-void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int currentTemp, char *outputString)
+void UserMenu_DetermineLCDString(const DataBuffer_t *DataBuffer, char *outputStringTop, char *outputStringBottom)
 {
-    ButtonPressedSinceLastCall(PushButtonStates);
+    // Bottom string looks the same regardless of state
+    DetermineBottomLCDString(DataBuffer, outputStringBottom);
 
-    fridgeCurrentTemp = currentTemp;
+    ButtonPressedSinceLastCall(DataBuffer);
+
+    fridgeCurrentTemp = DataBuffer->averageTemperature;
 
     if ((fridgeCurrentTemp > UserSettings.tempBoundHigh) || (fridgeCurrentTemp < UserSettings.tempBoundLow))
     {
@@ -85,23 +90,23 @@ void UserMenu_DetermineLCDString(const PushButtonStates_t *PushButtonStates, int
     switch(CurrentMenuState)
     {
         case MENU_MAIN:
-            nextState = MenuMain_State(outputString);
+            nextState = MenuMain_State(outputStringTop);
             break;
 
         case MENU_SET_TEMP:
-            nextState = MenuSetTemp_State(outputString);
+            nextState = MenuSetTemp_State(outputStringTop);
             break;
 
         case MENU_SET_LOW_BOUND:
-            nextState = MenuSetLowBound_State(outputString);
+            nextState = MenuSetLowBound_State(outputStringTop);
             break;
 
         case MENU_SET_UP_BOUND:
-            nextState = MenuSetUpBound_State(outputString);
+            nextState = MenuSetUpBound_State(outputStringTop);
             break;
 
         case MENU_TEMP_ERROR:
-            nextState = MenuTempError_State(outputString);
+            nextState = MenuTempError_State(outputStringTop);
             break;
 
         default:
@@ -118,10 +123,28 @@ void UserMenu_GetUserSettings(UserSettings_t *OutputUserSettings)
     *OutputUserSettings = UserSettings;
 }
 
-static void ButtonPressedSinceLastCall(const PushButtonStates_t *PushButtonStates)
+static void DetermineBottomLCDString(const DataBuffer_t *DataBuffer, char *outputStringBottom)
+{
+    char fanState[4] = "OFF";
+    char compressorState[4] = "OFF";
+
+    if (DataBuffer->fanIsOn)
+    {
+        strcpy(fanState, "ON");
+    }
+
+    if (DataBuffer->compressorIsOn)
+    {
+        strcpy(compressorState, "ON");
+    }
+
+    snprintf(outputStringBottom, 16, "Cmp:%s Fan:%s", compressorState, fanState);
+}
+
+static void ButtonPressedSinceLastCall(const DataBuffer_t *DataBuffer)
 {
     static int i;
-    static PushButtonStates_t PreviousPushButtonStates;
+    static bool previousButtonIsClickedState[4];
 
     // Don't do anything for a bit to let things stabilize.
     if(i < 10)
@@ -135,29 +158,32 @@ static void ButtonPressedSinceLastCall(const PushButtonStates_t *PushButtonState
     ButtonNewlyPressed.left = false;
     ButtonNewlyPressed.right = false;
 
-    if ( (PushButtonStates->button[0] != PreviousPushButtonStates.button[0]) && (PushButtonStates->button[0] == BUTTON_PRESSED) )
+    if ( (DataBuffer->buttonIsClicked[0] != previousButtonIsClickedState[0]) && (DataBuffer->buttonIsClicked[0]) )
     {
         ButtonNewlyPressed.up = true;
     }
-    if ( (PushButtonStates->button[1] != PreviousPushButtonStates.button[1]) && (PushButtonStates->button[1] == BUTTON_PRESSED) )
+    if ( (DataBuffer->buttonIsClicked[1] != previousButtonIsClickedState[1]) && (DataBuffer->buttonIsClicked[1]) )
     {
         ButtonNewlyPressed.down = true;
     }
-    if ( (PushButtonStates->button[2] != PreviousPushButtonStates.button[2]) && (PushButtonStates->button[2] == BUTTON_PRESSED) )
+    if ( (DataBuffer->buttonIsClicked[2] != previousButtonIsClickedState[2]) && (DataBuffer->buttonIsClicked[2]) )
     {
         ButtonNewlyPressed.left = true;
     }
-    if ( (PushButtonStates->button[3] != PreviousPushButtonStates.button[3]) && (PushButtonStates->button[3] == BUTTON_PRESSED) )
+    if ( (DataBuffer->buttonIsClicked[3] != previousButtonIsClickedState[3]) && (DataBuffer->buttonIsClicked[3]) )
     {
         ButtonNewlyPressed.right = true;
     }
 
-    PreviousPushButtonStates = *PushButtonStates;
+    for (int i = 0; i < NUM_USER_BUTTONS; i++)
+    {
+        previousButtonIsClickedState[i] = DataBuffer->buttonIsClicked[i];
+    }
 }
 
-static Menu_State_t MenuMain_State(char *outputString)
+static Menu_State_t MenuMain_State(char *outputStringTop)
 {
-    snprintf(outputString, 16, "Temperature: %dC", fridgeCurrentTemp);
+    snprintf(outputStringTop, 16, "Temp now: %d.%dC", (int) fridgeCurrentTemp, ((int)(fridgeCurrentTemp*10))%10);
 
     if(ButtonNewlyPressed.right)
     {
@@ -171,9 +197,9 @@ static Menu_State_t MenuMain_State(char *outputString)
     return MENU_MAIN;
 }
 
-static Menu_State_t MenuSetTemp_State(char *outputString)
+static Menu_State_t MenuSetTemp_State(char *outputStringTop)
 {
-    snprintf(outputString, 16, "Set Temp: %dC", UserSettings.setTemp);
+    snprintf(outputStringTop, 16, "Set Temp: %dC", UserSettings.setTemp);
 
 
     if (ButtonNewlyPressed.right)
@@ -205,14 +231,14 @@ static Menu_State_t MenuSetTemp_State(char *outputString)
         UserSettings.tempBoundHigh = UserSettings.setTemp + 1;
     }
 
-    snprintf(outputString, 16, "Set Temp: %dC", UserSettings.setTemp);
+    snprintf(outputStringTop, 16, "Set Temp: %dC", UserSettings.setTemp);
 
     return MENU_SET_TEMP;
 }
 
-static Menu_State_t MenuSetLowBound_State(char *outputString)
+static Menu_State_t MenuSetLowBound_State(char *outputStringTop)
 {
-    snprintf(outputString, 16, "Low Bound: %dC", UserSettings.tempBoundLow);
+    snprintf(outputStringTop, 16, "Low Bound: %dC", UserSettings.tempBoundLow);
 
     if(ButtonNewlyPressed.right)
     {
@@ -238,14 +264,14 @@ static Menu_State_t MenuSetLowBound_State(char *outputString)
         UserSettings.tempBoundLow = UserSettings.setTemp - 1;
     }
 
-    snprintf(outputString, 16, "Low Bound: %dC", UserSettings.tempBoundLow);
+    snprintf(outputStringTop, 16, "Low Bound: %dC", UserSettings.tempBoundLow);
 
     return MENU_SET_LOW_BOUND;
 }
 
-static Menu_State_t MenuSetUpBound_State(char *outputString)
+static Menu_State_t MenuSetUpBound_State(char *outputStringTop)
 {
-    snprintf(outputString, 16, "High Bound: %dC", UserSettings.tempBoundHigh);
+    snprintf(outputStringTop, 16, "High Bound: %dC", UserSettings.tempBoundHigh);
 
     if(ButtonNewlyPressed.right)
     {
@@ -271,12 +297,12 @@ static Menu_State_t MenuSetUpBound_State(char *outputString)
         UserSettings.tempBoundHigh = UserSettings.setTemp + 1;
     }
 
-    snprintf(outputString, 16, "High Bound: %dC", UserSettings.tempBoundHigh);
+    snprintf(outputStringTop, 16, "High Bound: %dC", UserSettings.tempBoundHigh);
 
     return MENU_SET_UP_BOUND;
 }
 
-static Menu_State_t MenuTempError_State(char *outputString)
+static Menu_State_t MenuTempError_State(char *outputStringTop)
 {
 
     static int counter;
@@ -299,11 +325,11 @@ static Menu_State_t MenuTempError_State(char *outputString)
 
     if (fridgeCurrentTemp > UserSettings.tempBoundHigh)
     {
-        snprintf(outputString, 16, "Temp too high!");
+        snprintf(outputStringTop, 16, "Temp too high!");
     }
     else if (fridgeCurrentTemp < UserSettings.tempBoundLow)
     {
-        snprintf(outputString, 16, "Temp too low!");
+        snprintf(outputStringTop, 16, "Temp too low!");
     }
 
     return MENU_MAIN;
