@@ -84,7 +84,7 @@ int I2CManager_SendToLCD(const char *str);
 * This function should be called exactly once per control loop period, though is safe to call more often.
 * Returns succeeded if the transmission was started successfully, failed if the transmission failed to start
 * and busy if an exchange is in progress. In the case of a busy return, nothing happens.
-* This is a non blocking function that returns right away.
+* This function takes less than 5ms to finish executing.
 * @return           RETROFRIGERATION_SUCCEEDED, RETROFRIGERATION_BUSY or RETROFRIGERATION_FAILED
 */
 int I2CManager_LaunchExchange(void);

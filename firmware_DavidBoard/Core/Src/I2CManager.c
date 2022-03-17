@@ -75,9 +75,9 @@ static void LaunchIOExpand1ReadExchange(void);
 static void LaunchIOExpand1WriteExchange(void);
 
 static void InitLCD(void);
-static int ExecuteLCDExchange(void);
+static void ExecuteLCDExchange(void);
 static void LCDSendCommandPolling(uint8_t cmd);
-static void LCDSendDataIT(char data);
+static void LCDSendDataPolling(char data);
 
 /***********************************************************************************************************************
  * Code
@@ -221,7 +221,7 @@ int I2CManager_LaunchExchange(void)
 
 	currentBusStatus = BUSY_IOEXPAND_1_READING;
 
-    LCDSendCommandPolling(LCD_CLEAR_CMD);
+    ExecuteLCDExchange();
 
 	LaunchIOExpand1ReadExchange();
 
@@ -285,22 +285,20 @@ static void LaunchIOExpand1WriteExchange(void)
     HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND1_SLAVE_ADDRESS_W, &IOExpand1WriteData, sizeof(IOExpand1WriteData));
 }
 
-static int ExecuteLCDExchange(void)
+static void ExecuteLCDExchange(void)
 {
-    static int currentIndex = 0;
+    LCDSendCommandPolling(LCD_CLEAR_CMD);
+    HAL_Delay(1);
 
-    if (strToWrite[currentIndex] == '\0')
+    uint8_t i = 0;
+
+    while(strToWrite[i] != '\0')
     {
-        currentIndex = 0;
-        return LCD_EXCHANGE_COMPLETE;
-    }
-    else
-    {
-        currentIndex ++;
-        LCDSendDataIT(strToWrite[currentIndex - 1]);
+        LCDSendDataPolling(strToWrite[i]);
+        i++;
     }
 
-    return LCD_EXCHANGE_IN_PROGRESS;
+    strHasBeenWritten = true;
 }
 
 static void LCDSendCommandPolling(uint8_t cmd)
@@ -317,7 +315,7 @@ static void LCDSendCommandPolling(uint8_t cmd)
     HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W, data_t, sizeof(data_t), DEFAULT_TIMEOUT);
 }
 
-static void LCDSendDataIT(char data)
+static void LCDSendDataPolling(char data)
 {
     uint8_t data_u, data_l;
     uint8_t data_t[4];
@@ -328,7 +326,7 @@ static void LCDSendDataIT(char data)
     data_t[2] = data_l|0x0D;  //en=1, rs=0
     data_t[3] = data_l|0x09;  //en=0, rs=0
 
-    HAL_I2C_Master_Transmit_IT(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W,data_t, sizeof(data_t));
+    HAL_I2C_Master_Transmit(&hi2c2, IOEXPAND2_SLAVE_ADDRESS_W,data_t, sizeof(data_t), DEFAULT_TIMEOUT);
 }
 
 /****************************Interrupt Handlers****************************/
@@ -344,9 +342,8 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
             break;
 
         case BUSY_ADC:
-            ExecuteLCDExchange();
             adcDataNew = true;
-            currentBusStatus = BUSY_LCD;
+            currentBusStatus = READY;
             break;
 
         default:
@@ -365,23 +362,6 @@ void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
             currentBusStatus = BUSY_ADC;
             LaunchADCExchange();
             break;
-
-        case BUSY_LCD:
-        {
-            int status = ExecuteLCDExchange();
-
-            if(status == LCD_EXCHANGE_IN_PROGRESS)
-            {
-                currentBusStatus = BUSY_LCD;
-            }
-            else
-            {
-                strHasBeenWritten = true;
-                currentBusStatus = READY;
-            }
-            break;
-        }
-
 
         default:
             currentBusStatus = FAILED;
