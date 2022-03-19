@@ -131,16 +131,7 @@ static Controller_State_t LogData_State(void)
 
     I2CManager_LaunchExchange();
 
-//    Logs_LogWifi
-//	Wifi_Data("B", &huart2);
     Logs_LogWifi(&DataBuffer, &huart2);
-
-//    char * s = "a";
-//
-//    HAL_UART_Transmit_IT (&huart2, (uint8_t *) s, sizeof(s));
-////    HAL_Delay();
-//
-//    HAL_UART_Receive_IT (&huart2, (uint8_t *) s, sizeof(s));
 
     return CTRL_DO_MATH;
 }

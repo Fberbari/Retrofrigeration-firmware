@@ -29,5 +29,4 @@ void Logs_Init(UART_HandleTypeDef *huart);
 */
 
 int Logs_LogWifi(DataBuffer_t *DataBuffer, UART_HandleTypeDef *huart);
-int Wifi_Data(char *str, UART_HandleTypeDef *huart);
 int Logs_LogFlash(DataBuffer_t *DataBuffer);
