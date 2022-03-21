@@ -38,8 +38,6 @@ static SystemOutputState_t SystemOutputState = {
 	    .fanIsOn = false
 };
 
-int temp = 0;
-bool usb_logs_requested = false;
 
 // state input/output data
 static ActuatorCommands_t ActuatorCommands;
@@ -119,21 +117,16 @@ static Controller_State_t CollectData_State(void)
 
 static Controller_State_t LogData_State(void)
 {
-	if (temp_send_to_terminal_delay < temp)
-	{
-		usb_logs_requested = true;
-		temp = 0;
-	}
-	temp ++;
 
+	// log data
 	int r = Flash_LogData(&DataBuffer, &SystemOutputState);
-
 	if (r != RETROFRIGERATION_SUCCEEDED)
 	{
 		return CTRL_FAILED;
 	}
 
-	r = Flash_PassDataToUSB(&usb_logs_requested);
+	// send data to usb
+	r = Flash_PassDataToUSB();
 	if (r != RETROFRIGERATION_SUCCEEDED)
 	{
 		return CTRL_FAILED;
