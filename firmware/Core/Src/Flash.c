@@ -325,7 +325,8 @@ int Flash_PassDataToUSB(void)
 	if(usb_logs_requested)
 	{
 		usb_logs_requested = false;
-		HAL_UART_Transmit(&huart1, "Generating Logs...\r\n", 20, sFLASH_TIMEOUT);
+		HAL_UART_Transmit(&huart1, (uint8_t*)"Generating Logs...\r\n", 20, sFLASH_TIMEOUT);
+		HAL_UART_Transmit(&huart1, (uint8_t*)"Min Temp | Max Temp | Avg Temp | Bat Volt | Mains Failed | Bat Is Chg | Comp On | Fan On |\r\n", 92, sFLASH_TIMEOUT);
 
 		uint32_t read_pointer = sFLASH_BASE_ADDRESS;
 		uint8_t read_buffer[32];
@@ -339,7 +340,7 @@ int Flash_PassDataToUSB(void)
 		}
 
 		// send newline
-		HAL_UART_Transmit(&huart1, "\r\n", 2, sFLASH_TIMEOUT);
+		HAL_UART_Transmit(&huart1, (uint8_t*)"\r\n", 2, sFLASH_TIMEOUT);
 	}
 	return RETROFRIGERATION_SUCCEEDED;
 }
@@ -349,99 +350,145 @@ int Flash_PassDataToUSB(void)
 // given a 32 byte block of raw data read from the flash, format and pass to uart
 void uart_send_log_entry(uint8_t* buffer)
 {
-	char write_buffer[16];
-	char write_buffer_seperator[3] = " | ";
+	char write_buffer[48];
+//	char write_buffer_seperator[3] = " | ";
 	uint8_t return_carriage[2] = {"\r\n"};
-	int digit_count;
+	int digit_count = 0;
 
-	// min temperature
+//	// min temperature
+//	uint32_t min_temperature =
+//			(uint32_t)buffer[4] << 0 |
+//			(uint32_t)buffer[5] << 8 |
+//			(uint32_t)buffer[6] << 16|
+//			(uint32_t)buffer[7] << 24;
+//    int min_temperature_intCast;
+//    memcpy(&min_temperature_intCast, &min_temperature, sizeof(int));
+//    digit_count = numPlaces(min_temperature_intCast);
+//	snprintf (write_buffer, 16, "Min Temp: %d", min_temperature_intCast);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// max temperature
+//	uint32_t max_temperature =
+//			(uint32_t)buffer[8] << 0 |
+//			(uint32_t)buffer[9] << 8 |
+//			(uint32_t)buffer[10] << 16|
+//			(uint32_t)buffer[11] << 24;
+//    int max_temperature_intCast;
+//    memcpy(&max_temperature_intCast, &max_temperature, sizeof(int));
+//    digit_count = numPlaces(max_temperature_intCast);
+//	snprintf (write_buffer, 16, "Max Temp: %d", max_temperature_intCast);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// average temperature
+//	uint32_t avg_temperature =
+//			(uint32_t)buffer[12] << 0 |
+//			(uint32_t)buffer[13] << 8 |
+//			(uint32_t)buffer[14] << 16|
+//			(uint32_t)buffer[15] << 24;
+//    int avg_temperature_intCast;
+//    memcpy(&avg_temperature_intCast, &avg_temperature, sizeof(int));
+//    digit_count = numPlaces(avg_temperature_intCast);
+//	snprintf (write_buffer, 16, "AVG Temp: %d", avg_temperature_intCast);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// battery voltage
+//	uint32_t batt_voltage =
+//			(uint32_t)buffer[16] << 0 |
+//			(uint32_t)buffer[17] << 8 |
+//			(uint32_t)buffer[18] << 16|
+//			(uint32_t)buffer[19] << 24;
+//    int batt_voltage_intCast;
+//    memcpy(&batt_voltage_intCast, &batt_voltage, sizeof(int));
+//    digit_count = numPlaces(batt_voltage_intCast);
+//	snprintf (write_buffer, 16, "Bat Volt: %d", batt_voltage_intCast);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// mains failed
+//	snprintf (write_buffer, 16, "Mains Failed: %d", (bool)(buffer[21]));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 15);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// battery is charging
+//	snprintf (write_buffer, 16, "Bat Is Chg: %d", (bool)(buffer[22]));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 13);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// compressor is on
+//	snprintf (write_buffer, 16, "Comp On: %d", (bool)(buffer[23]));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+//
+//	// fan is on
+//	snprintf (write_buffer, 16, "Fan On: %d", (bool)(buffer[24]));
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 9);
+//	HAL_Delay(inter_UART_TX_delay);
+//	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
+//	HAL_Delay(inter_UART_TX_delay);
+
 	uint32_t min_temperature =
 			(uint32_t)buffer[4] << 0 |
 			(uint32_t)buffer[5] << 8 |
 			(uint32_t)buffer[6] << 16|
 			(uint32_t)buffer[7] << 24;
-    int min_temperature_intCast;
-    memcpy(&min_temperature_intCast, &min_temperature, sizeof(int));
-    digit_count = numPlaces(min_temperature_intCast);
-	snprintf (write_buffer, 16, "Min Temp: %d", min_temperature_intCast);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
+	int min_temperature_intCast;
+	memcpy(&min_temperature_intCast, &min_temperature, sizeof(int));
+	digit_count += numPlaces(min_temperature_intCast);
 
-	// max temperature
 	uint32_t max_temperature =
 			(uint32_t)buffer[8] << 0 |
 			(uint32_t)buffer[9] << 8 |
 			(uint32_t)buffer[10] << 16|
 			(uint32_t)buffer[11] << 24;
-    int max_temperature_intCast;
-    memcpy(&max_temperature_intCast, &max_temperature, sizeof(int));
-    digit_count = numPlaces(max_temperature_intCast);
-	snprintf (write_buffer, 16, "Max Temp: %d", max_temperature_intCast);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
+	int max_temperature_intCast;
+	memcpy(&max_temperature_intCast, &max_temperature, sizeof(int));
+	digit_count += numPlaces(max_temperature_intCast);
 
-	// average temperature
 	uint32_t avg_temperature =
 			(uint32_t)buffer[12] << 0 |
 			(uint32_t)buffer[13] << 8 |
 			(uint32_t)buffer[14] << 16|
 			(uint32_t)buffer[15] << 24;
-    int avg_temperature_intCast;
-    memcpy(&avg_temperature_intCast, &avg_temperature, sizeof(int));
-    digit_count = numPlaces(avg_temperature_intCast);
-	snprintf (write_buffer, 16, "AVG Temp: %d", avg_temperature_intCast);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
+	int avg_temperature_intCast;
+	memcpy(&avg_temperature_intCast, &avg_temperature, sizeof(int));
+	digit_count += numPlaces(avg_temperature_intCast);
 
-	// battery voltage
 	uint32_t batt_voltage =
 			(uint32_t)buffer[16] << 0 |
 			(uint32_t)buffer[17] << 8 |
 			(uint32_t)buffer[18] << 16|
 			(uint32_t)buffer[19] << 24;
-    int batt_voltage_intCast;
-    memcpy(&batt_voltage_intCast, &batt_voltage, sizeof(int));
-    digit_count = numPlaces(batt_voltage_intCast);
-	snprintf (write_buffer, 16, "Bat Volt: %d", batt_voltage_intCast);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10 + digit_count);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
+	int batt_voltage_intCast;
+	memcpy(&batt_voltage_intCast, &batt_voltage, sizeof(int));
+	digit_count += numPlaces(batt_voltage_intCast);
 
-	// mains failed
-	snprintf (write_buffer, 16, "Mains Failed: %d", (bool)(buffer[21]));
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 15);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
-
-	// battery is charging
-	snprintf (write_buffer, 16, "Bat Is Chg: %d", (bool)(buffer[22]));
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 13);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
-
-	// compressor is on
-	snprintf (write_buffer, 16, "Comp On: %d", (bool)(buffer[23]));
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 10);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
-
-	// fan is on
-	snprintf (write_buffer, 16, "Fan On: %d", (bool)(buffer[24]));
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer, 9);
-	HAL_Delay(inter_UART_TX_delay);
-	HAL_UART_Transmit_IT(&huart1, (uint8_t*)write_buffer_seperator, 3);
-	HAL_Delay(inter_UART_TX_delay);
-
+	snprintf (write_buffer, 48, "%d | %d | %d | %d | %d | %d | %d | %d",
+			min_temperature_intCast,
+			max_temperature_intCast,
+			avg_temperature_intCast,
+			batt_voltage_intCast,
+			(bool)(buffer[21]),
+			(bool)(buffer[22]),
+			(bool)(buffer[23]),
+			(bool)(buffer[24]));
+	HAL_UART_Transmit(&huart1, (uint8_t*)write_buffer, 25 + digit_count, sFLASH_TIMEOUT);
 
 	HAL_UART_Transmit(&huart1, return_carriage, 2, sFLASH_TIMEOUT);
 
