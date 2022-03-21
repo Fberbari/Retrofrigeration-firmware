@@ -3,6 +3,7 @@
 #include "UserMenu.h"
 #include "TemperatureCalc.h"
 #include "Logs.h"
+#include "flash.h"
 
 /***********************************************************************************************************************
  * Definitions
@@ -140,6 +141,9 @@ static Controller_State_t LogData_State(void)
     I2CManager_LaunchExchange();
 
     Logs_LogWifi(&DataBuffer, &huart2);
+
+    Flash_LogData(&DataBuffer);
+    Flash_PassDataToUSB();
 
     return CTRL_DO_MATH;
 }
