@@ -53,7 +53,7 @@ void Logs_Init(UART_HandleTypeDef *huart)
 	HAL_UART_Receive_IT (huart, (uint8_t *) data5, 19);
 }
 
-int Logs_LogWifi(DataBuffer_t *DataBuffer, UART_HandleTypeDef *huart)
+int Logs_LogWifi(DataBuffer_t *DataBuffer, UART_HandleTypeDef *huart, bool send)
 {
 	int a1 = (int) (DataBuffer->temperature[0]*100);
 	int b1 = (int) (DataBuffer->temperature[1]*100);
@@ -73,11 +73,12 @@ int Logs_LogWifi(DataBuffer_t *DataBuffer, UART_HandleTypeDef *huart)
 
 	char sad[len];
 	sprintf (sad, "AT+CIPSEND=0,%d\r\n", size); //16+
-	HAL_UART_Transmit_IT (huart, (uint8_t *) sad, len);
-	HAL_Delay(5000);
+	if (!(send))
+		HAL_UART_Transmit_IT (huart, (uint8_t *) sad, len);
 
-	HAL_UART_Transmit_IT (huart, (uint8_t *) data, size);
-	HAL_Delay(5000);
+	if (send)
+		HAL_UART_Transmit_IT (huart, (uint8_t *) data, size);
+
 //  // if wifi not connected, return 0
     return 1;
 }

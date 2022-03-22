@@ -133,13 +133,25 @@ static Controller_State_t LogData_State(void)
     char LCDStringTop[17];
     char LCDStringBottom[17] = "Heloo";
 
+    static uint32_t numLoopsServerInit;
+    numLoopsServerInit++;
+
     UserMenu_DetermineLCDString(&DataBuffer, LCDStringTop, LCDStringBottom);
 
     I2CManager_SendToLCD(LCDStringTop, LCDStringBottom);
 
     I2CManager_LaunchExchange();
 
-    Logs_LogWifi(&DataBuffer, &huart2);
+
+
+    if (numLoopsServerInit == 0)
+    	Logs_LogWifi(&DataBuffer, &huart2, 0);
+
+    if (numLoopsServerInit >= 5*CTRL_LOOP_FREQUENCY)
+		Logs_LogWifi(&DataBuffer, &huart2, 1);
+
+    if (numLoopsServerInit >= 10*CTRL_LOOP_FREQUENCY)
+    	numLoopsServerInit = 0;
 
     return CTRL_DO_MATH;
 }

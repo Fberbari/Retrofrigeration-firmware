@@ -28,5 +28,5 @@ void Logs_Init(UART_HandleTypeDef *huart);
 * @return           LOG_SUCCEEDED or LOG_FAILED
 */
 
-int Logs_LogWifi(DataBuffer_t *DataBuffer, UART_HandleTypeDef *huart);
+int Logs_LogWifi(DataBuffer_t *DataBuffer, UART_HandleTypeDef *huart, bool send);
 int Logs_LogFlash(DataBuffer_t *DataBuffer);
